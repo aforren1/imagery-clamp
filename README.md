@@ -5,6 +5,7 @@ Production test: `npm run build && netlify dev`
 
 ## Order of Events
 
+- Intro instructions
 - 20 trials of baseline reaches to targets, no feedback
 - 20 trials of reaches to targets, with online feedback (so participants get used to seeing a cursor)
 - Introduce imagery instructions + clamp instructions (Olivia and I will write those up soon)
@@ -20,3 +21,7 @@ Production test: `npm run build && netlify dev`
 
 One ref (for how other folks do clamps):
 https://github.com/alan-s-lee/OnPoint/blob/master/public/index.js
+https://github.com/alan-s-lee/OnPoint/blob/master/public/index.js#L804
+
+And one of the papers:
+https://www.nature.com/articles/s42003-018-0021-y

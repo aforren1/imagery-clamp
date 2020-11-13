@@ -7,6 +7,9 @@ export default class TitleScene extends Phaser.Scene {
   }
   preload() {
     // load feedback images (check? x? sparks?)
+    this.load.image('check', 'assets/check_small.png')
+    this.load.image('x', 'assets/x_small.png')
+    this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json')
   }
   create() {
     let height = this.game.config.height
@@ -55,6 +58,7 @@ export default class TitleScene extends Phaser.Scene {
           this.cameras.main.setAlpha(v / 255)
         },
         onComplete: () => {
+          // TODO: https://docs.google.com/document/d/17pvFMFqtAIx0ZA6zMZRU_A2-VnjhNX9QlN1Cgy-3Wdg/edit
           this.input.mouse.requestPointerLock()
         },
       })
