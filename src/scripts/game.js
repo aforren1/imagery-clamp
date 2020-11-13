@@ -45,22 +45,23 @@ const phaser_config = {
   },
 }
 
+// https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range
+function randint(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
 window.addEventListener('load', () => {
   const game = new Phaser.Game(phaser_config)
   log.info('Phaser loaded.')
   // TODO: figure out prolific/mturk/elsewhere here (URL parsing)
   // Remember that localStorage *only stores strings*
   const url_params = new URL(window.location.href).searchParams
-  // add flag to clear localStorage
-  if (url_params.get('clear') !== null) {
-    localStorage.clear()
-  }
   // If coming from prolific, use that ID. Otherwise, generate some random chars
   const randomString = (length) => [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('')
   let id = url_params.get('PROLIFIC_PID') || url_params.get('id') || randomString(10)
 
-  // if present at all, we're in debug mode
-  let is_debug = url_params.get('debug') !== null
+  // assign group if need be
+  let group = url_params.get('group') || randint(1, 4)
 
   let user_config = {
     id: id,
@@ -75,8 +76,8 @@ window.addEventListener('load', () => {
     renderer: game.config.renderType === Phaser.CANVAS ? 'canvas' : 'webgl',
     user_agent: new UAParser().getResult(),
     fullscreen_supported: document.fullscreenEnabled, // this is pretty important for us?
-    debug: url_params.get('debug') !== null, // if debug !== null, use flashing square
-    debug: is_debug,
+    debug: url_params.get('debug') !== null,
+    group: group,
   }
   game.user_config = user_config // patch in to pass into game
   // set up for user

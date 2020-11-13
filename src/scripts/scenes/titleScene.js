@@ -48,7 +48,7 @@ export default class TitleScene extends Phaser.Scene {
       // I wish I could do both at the same time, but after the fullscreen
       // comes on it releases the pointer lock??
       //this.input.mouse.requestPointerLock()
-      this.scale.startFullscreen()
+      //this.scale.startFullscreen()
       this.tweens.addCounter({
         from: 255,
         to: 0,
@@ -60,6 +60,7 @@ export default class TitleScene extends Phaser.Scene {
         onComplete: () => {
           // TODO: https://docs.google.com/document/d/17pvFMFqtAIx0ZA6zMZRU_A2-VnjhNX9QlN1Cgy-3Wdg/edit
           this.input.mouse.requestPointerLock()
+          this.scene.start('MainScene')
         },
       })
     })

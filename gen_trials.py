@@ -1,5 +1,15 @@
 import random
 import json
+from timeit import default_timer
+from contextlib import ContextDecorator
+
+
+class time_fn(ContextDecorator):
+    def __enter__(self):
+        self.t0 = default_timer()
+
+    def __exit__(self, *args):
+        print(f'fn took {default_timer() - self.t0} seconds.')
 
 
 def make_trial(target_radius, target_angle, clamp_angle, trial_type, section):
@@ -14,11 +24,11 @@ def angle_helper(ref):
     return [ref, ref + 90, ref + 180, ref + 270]
 
 
-def generate_trials(seed=1):
+def generate_trials(seed=1, sign=1):
 
     random.seed(seed)
     radius = 200
-    sign = random.choice([-1, 1])
+    #sign = random.choice([-1, 1])
     ref_angle = random.randint(5, 85)
     clamp_angle = 15 * sign
     imagine_per_target = 30
@@ -32,7 +42,7 @@ def generate_trials(seed=1):
         random.shuffle(angles)
         for angle in angles:
             trials.append(make_trial(radius, angle, clamp_angle,
-                                     'no_feedback', 'warmup'))
+                                     'no_feedback', 'warmup_invis'))
 
     # part 2: 20 trials with online feedback
     for repeat in range(5):
@@ -40,7 +50,7 @@ def generate_trials(seed=1):
         random.shuffle(angles)
         for angle in angles:
             trials.append(make_trial(radius, angle, clamp_angle,
-                                     'online_feedback', 'warmup'))
+                                     'online_feedback', 'warmup_vis'))
     # part 3: main event
     bad_t = 1
 
@@ -86,7 +96,19 @@ def generate_trials(seed=1):
     return trials
 
 
-seed = 2
-foo = generate_trials(seed=seed)
-with open(f'g{seed}.json', 'w') as f:
-    json.dump(foo, f)
+res = {}
+with time_fn():
+    res[1] = generate_trials(seed=1, sign=1)
+
+with time_fn():
+    res[2] = generate_trials(seed=1, sign=-1)
+
+with time_fn():
+    res[3] = generate_trials(seed=2, sign=1)
+
+with time_fn():
+    res[4] = generate_trials(seed=2, sign=-1)
+
+
+with open(f'trial_settings.json', 'w') as f:
+    json.dump(res, f)

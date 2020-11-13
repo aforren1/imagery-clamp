@@ -25,3 +25,5 @@ https://github.com/alan-s-lee/OnPoint/blob/master/public/index.js#L804
 
 And one of the papers:
 https://www.nature.com/articles/s42003-018-0021-y
+
+Approximate reaching movement by two sigmoid-y components and (offset, peak velocity, reach duration)
