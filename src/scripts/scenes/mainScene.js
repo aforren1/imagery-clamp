@@ -10,16 +10,17 @@ import { clamp } from '../utils/clamp'
 const WHITE = 0xffffff
 const MAGENTA = 0xff00ff // imagine moving to the target
 const GREEN = 0x00ff00 // actually move to the target
+const GRAY = 0x666666
 
 // instructions correspond to the 'section' divisions in the trial table
 const txt_1 =
-  'Move the mouse to the center of the screen to start a trial. You will see [color=yellow]four targets[/color]. When a target turns [color=#00ff00]green[/color], move your mouse [color=yellow]straight through[/color] the target. You will not be able to see the mouse cursor, but will receive feedback that you have moved far enough when the target turns back to [color=white]white[/color]. Always try to make straight mouse movements.'
+  'There are four circular targets arranged around the screen. Move your mouse to the small circle at the center of the screen to start a trial. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn back to [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
 const txt_2 =
-  'You will continue doing the same task, but now will be able to see the mouse cursor. Continue to make [color=yellow]straight mouse movements through the target[/color].'
+  'The mouse cursor will now be visible during your movements. Continue to make straight mouse movements through the targets when they turn [color=#00ff00]green[/color].'
 const txt_3 =
-  'Now you will receive a mixture of [color=magenta]imagined[/color] and [color=#00ff00]action[/color] trials.\n\nWhen the target turns [color=magenta]magenta[/color] in [color=magenta]imagined[/color] trials, you will [color=red]not move the mouse[/color], but will instead imagine moving the mouse [color=yellow]straight through[/color] the target. We will show you a moving cursor in these trials.\n\nWhen the target turns [color=#00ff00]green[/color], you will [color=#00ff00]move[/color] the move your mouse [color=yellow]straight through[/color] the target. You will not be able to see the mouse cursor on these trials, but will receive feedback that you have moved far enough when the target turns back to [color=white]white[/color]. On these trials, always try to make straight mouse movements.'
+  'You will now encounter [color=magenta]imagination[/color] and [color=#00ff00]action[/color] trials.\n\nOn [color=magenta]imagination[/color] trials, the target will turn [color=magenta]magenta[/color]. [color=red]Do not move the mouse to the magenta target[/color]. Instead, [color=yellow]imagine[/color] moving the mouse straight through the target. You will see the cursor miss the target. Try your best to [color=yellow]ignore[/color] the cursor and [color=yellow]visualize yourself moving the mouse directly through the target[/color].\n\nOn [color=#00ff00]action[/color] trials, the target will turn [color=#00ff00]green[/color]. Move your mouse straight through the [color=#00ff00]green[/color] target. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
 const txt_4 =
-  'One more section! This will be identical to the first section. When a target turns [color=#00ff00]green[/color], move your mouse [color=yellow]straight through[/color] the target. You will not be able to see the mouse cursor, but will receive feedback that you have moved far enough when the target turns back to [color=white]white[/color]. Always try to make straight mouse movements.'
+  'One more section! This section will be the same as the first section. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
 
 const states = Enum([
   'INSTRUCT', // show text instructions (based on stage of task)
@@ -71,13 +72,13 @@ export default class MainScene extends Phaser.Scene {
       let radians = Phaser.Math.DegToRad(angle)
       let x = radius * Math.cos(radians)
       let y = radius * Math.sin(radians)
-      this.targets[angle] = this.add.circle(x, y, 30, WHITE)
+      this.targets[angle] = this.add.circle(x, y, 30, GRAY)
     }
     console.log(this.targets)
 
     // user cursor
     this.user_cursor = this.add.circle(-30, -30, 5, WHITE)
-    this.fake_cursor = this.add.circle(0, 0, 5, WHITE)
+    this.fake_cursor = this.add.circle(0, 0, 5, WHITE).setVisible(false)
 
     // big fullscreen quad in front of game, but behind text instructions
     this.darkener = this.add.rectangle(0, 0, 800, 800, 0x000000).setAlpha(0.9)
@@ -144,6 +145,15 @@ export default class MainScene extends Phaser.Scene {
         }
       }
     })
+    // set up pausing (TODO, doesn't actually work-- resuming doesn't resume the update loop)
+    // this.scale.on('leavefullscreen', () => {
+    //   this.scene.pause()
+    //   this.scene.launch('PauseScene')
+    // })
+    // this.game.events.on('hidden', () => {
+    //   this.scene.pause()
+    //   this.scene.launch('PauseScene')
+    // })
   }
 
   update() {
@@ -209,6 +219,8 @@ export default class MainScene extends Phaser.Scene {
           } else if (tifo.trial_type === 'clamp_imagery') {
             this.user_cursor.visible = false // use fake_cursor instead
             this.fake_cursor.visible = true
+            this.fake_cursor.x = 0
+            this.fake_cursor.y = 0
             this.anim_flag = false
             color = MAGENTA
             let radians = Phaser.Math.DegToRad(tifo.target_angle + tifo.clamp_angle)
@@ -239,7 +251,7 @@ export default class MainScene extends Phaser.Scene {
           console.log('Do not move on imagery trials.')
         }
         if (this.extent >= tifo.target_radius + 30 || this.anim_flag) {
-          this.targets[tifo.target_angle].fillColor = WHITE
+          this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
           this.fake_cursor.visible = false
           this.fake_cursor.x = 0
@@ -261,9 +273,11 @@ export default class MainScene extends Phaser.Scene {
             this.raw_x = this.raw_y = this.user_cursor.x = this.user_cursor.y = -30
             this.user_cursor.visible = true
             this.trial_counter += this.trial_incr
+            // decide new state
             this.state = states.PRETRIAL
           })
         }
+        break
     }
   }
   get state() {

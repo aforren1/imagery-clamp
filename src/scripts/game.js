@@ -10,6 +10,7 @@ import BBCodeTextPlugin from 'phaser3-rex-plugins/plugins/bbcodetext-plugin.js'
 import TextTypingPlugin from 'phaser3-rex-plugins/plugins/texttyping-plugin.js'
 import TitleScene from './scenes/titleScene'
 import MainScene from './scenes/mainScene'
+import PauseScene from './scenes/pauseScene'
 import EndScene from './scenes/endScene'
 
 let small_dim = 800 // nothing's going to be perfectly scaled, but that's fine?
@@ -23,7 +24,7 @@ const phaser_config = {
     width: small_dim,
     height: small_dim,
   },
-  scene: [TitleScene, MainScene, EndScene],
+  scene: [TitleScene, MainScene, PauseScene, EndScene],
   plugins: {
     global: [
       {
@@ -61,7 +62,8 @@ window.addEventListener('load', () => {
   let id = url_params.get('PROLIFIC_PID') || url_params.get('id') || randomString(10)
 
   // assign group if need be
-  let group = url_params.get('group') || randint(1, 4)
+  //let group = url_params.get('group') || randint(1, 4)
+  let group = 1
 
   let user_config = {
     id: id,
