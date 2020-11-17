@@ -250,10 +250,11 @@ export default class MainScene extends Phaser.Scene {
         if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
           console.log('Do not move on imagery trials.')
         }
-        if (this.extent >= tifo.target_radius + 30 || this.anim_flag) {
+        if (this.extent >= tifo.target_radius + 30 || (tifo.trial_type === 'clamp_imagery' && this.anim_flag)) {
           this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
           this.fake_cursor.visible = false
+          this.anim_flag = false
           this.fake_cursor.x = 0
           this.fake_cursor.y = 0
           this.user_cursor.visible = false
