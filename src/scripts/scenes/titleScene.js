@@ -20,6 +20,15 @@ export default class TitleScene extends Phaser.Scene {
         fontSize: 160,
         fontFamily: 'Arial',
         fontStyle: 'italic',
+        fill: false,
+        strokeThickness: 2,
+        shadow: {
+          blur: 10,
+          color: '#ffffff',
+          stroke: true,
+          fill: true,
+
+        }
       })
       .setOrigin(0.5, 0.5)
 
@@ -49,7 +58,7 @@ export default class TitleScene extends Phaser.Scene {
       // comes on it releases the pointer lock?? At least on FF, chrome does fine
       // this.input.mouse.requestPointerLock()
       // TODO: readd
-      this.scale.startFullscreen()
+      // this.scale.startFullscreen()
       this.tweens.addCounter({
         from: 255,
         to: 0,

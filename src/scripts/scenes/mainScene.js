@@ -80,6 +80,20 @@ export default class MainScene extends Phaser.Scene {
     this.user_cursor = this.add.circle(-30, -30, 5, WHITE)
     this.fake_cursor = this.add.circle(0, 0, 5, WHITE).setVisible(false)
 
+    // movement warning
+    this.dont_move = this.add
+      .text(0, 0, 'Do not move on\nimagine trials, but\nimagine moving\nthrough the target.', {
+        fontFamily: 'Verdana',
+        fontStyle: 'bold',
+        fontSize: 50,
+        color: '#ff0000',
+        align: 'center',
+        stroke: '#444444',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5, 0.5)
+      .setVisible(false)
+
     // big fullscreen quad in front of game, but behind text instructions
     this.darkener = this.add.rectangle(0, 0, 800, 800, 0x000000).setAlpha(0.9)
 
@@ -249,8 +263,20 @@ export default class MainScene extends Phaser.Scene {
         }
         if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
           console.log('Do not move on imagery trials.')
+          this.dont_move.visible = true
+          this.time.delayedCall(3000, () => {
+            this.dont_move.visible = false
+          })
+          this.targets[tifo.target_angle].fillColor = GRAY
+          this.state = states.POSTTRIAL
+          this.fake_cursor.visible = false
+          this.anim_flag = false
+          this.fake_cursor.x = 0
+          this.fake_cursor.y = 0
+          this.user_cursor.visible = false
         }
-        if (this.extent >= tifo.target_radius + 30 || (tifo.trial_type === 'clamp_imagery' && this.anim_flag)) {
+        if ((tifo.trial_type !== 'clamp_imagery' && this.extent >= tifo.target_radius + 30) ||
+          (tifo.trial_type === 'clamp_imagery' && this.anim_flag)) {
           this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
           this.fake_cursor.visible = false
@@ -265,12 +291,13 @@ export default class MainScene extends Phaser.Scene {
         if (this.entering) {
           this.entering = false
           // deal with trial data
-          let trial_data = { movement_data: this.trial_data, reference_time: this.reference_time }
+          let trial_data = { movement_data: this.trial_data, reference_time: this.reference_time, moved_on_imagery: this.dont_move.visible }
           let combo_data = merge_data(this.trial_info, trial_data)
           console.log(combo_data)
-          console.log(this.trial_info)
           this.all_data[this.trial_info.section].push(combo_data)
-          this.time.delayedCall(1500, () => {
+          let delay = 1500
+          delay += this.dont_move.visible ? 2000 : 0
+          this.time.delayedCall(delay, () => {
             this.raw_x = this.raw_y = this.user_cursor.x = this.user_cursor.y = -30
             this.user_cursor.visible = true
             this.trial_counter += this.trial_incr
