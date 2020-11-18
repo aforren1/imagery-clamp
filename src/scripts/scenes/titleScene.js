@@ -1,5 +1,4 @@
 import log from '../utils/logger'
-//import scheds from '../../scheds/sched.json'
 
 export default class TitleScene extends Phaser.Scene {
   constructor() {
@@ -7,9 +6,13 @@ export default class TitleScene extends Phaser.Scene {
   }
   preload() {
     // load feedback images (check? x? sparks?)
-    this.load.image('check', 'assets/check_small.png')
-    this.load.image('x', 'assets/x_small.png')
-    this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json')
+    // this.load.image('check', 'assets/check_small.png')
+    // this.load.image('x', 'assets/x_small.png')
+    // this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json')
+    this.load.image('mouse', 'assets/mouse.jpg')
+    this.load.image('touchscreen', 'assets/touchscreen.jpg')
+    this.load.image('trackball', 'assets/trackball.jpg')
+    this.load.image('trackpad', 'assets/trackpad.jpg')
   }
   create() {
     let height = this.game.config.height
@@ -57,7 +60,7 @@ export default class TitleScene extends Phaser.Scene {
       // comes on it releases the pointer lock?? At least on FF, chrome does fine
       // this.input.mouse.requestPointerLock()
       // TODO: readd
-      // this.scale.startFullscreen()
+      this.scale.startFullscreen()
       this.tweens.addCounter({
         from: 255,
         to: 0,

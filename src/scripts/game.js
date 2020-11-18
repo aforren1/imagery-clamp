@@ -24,6 +24,9 @@ const phaser_config = {
     width: small_dim,
     height: small_dim,
   },
+  audio: {
+    noAudio: true,
+  },
   scene: [TitleScene, MainScene, PauseScene, EndScene],
   plugins: {
     global: [

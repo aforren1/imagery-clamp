@@ -48,7 +48,6 @@ export default class MainScene extends Phaser.Scene {
     this.trial_counter = 0
     this.entering = true
     this.state = states.INSTRUCT
-    this.anim_flag = false
 
     let group = this.game.user_config.group
     this.trial_table = trials[group]
@@ -56,7 +55,7 @@ export default class MainScene extends Phaser.Scene {
     this.trial_incr = 1
     // in debug mode, just do subset of trials
     if (this.game.user_config.debug) {
-      this.trial_incr = 10
+      this.trial_incr = 20
     }
 
     let angles = []
@@ -217,12 +216,13 @@ export default class MainScene extends Phaser.Scene {
           } else if (this.trial_counter >= 20) {
             txt = txt_2
           }
-          this.instructions.start(txt, 1)
+          this.instructions.start(txt, 1) // 1 for debug, 50 for real
           this.instructions.typing.once('complete', () => {
             this.any_start.visible = true
             this.input.once('pointerdown', () => {
               this.darkener.visible = false
               this.instructions.visible = false
+              this.instructions.text = ''
               this.any_start.visible = false
               this.state = states.PRETRIAL
             })
@@ -256,7 +256,7 @@ export default class MainScene extends Phaser.Scene {
           this.reference_time = this.game.loop.now
           // look up trial info
 
-          console.log(tifo)
+          //console.log(tifo)
           let color = GREEN
           let target = this.targets[tifo.target_angle]
           if (tifo.trial_type === 'no_feedback') {
@@ -266,7 +266,6 @@ export default class MainScene extends Phaser.Scene {
             this.fake_cursor.visible = true
             this.fake_cursor.x = 0
             this.fake_cursor.y = 0
-            this.anim_flag = false
             color = MAGENTA
             let radians = Phaser.Math.DegToRad(tifo.target_angle + tifo.clamp_angle)
             let radius = tifo.target_radius + 60
@@ -281,9 +280,6 @@ export default class MainScene extends Phaser.Scene {
                   y: y,
                   ease: 'Power4',
                   duration: 200, // TODO: calc from how long it takes to get beyond
-                  onComplete: () => {
-                    this.anim_flag = true
-                  },
                 },
               ],
             })
@@ -302,7 +298,6 @@ export default class MainScene extends Phaser.Scene {
           this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
           this.fake_cursor.visible = false
-          this.anim_flag = false
           this.fake_cursor.x = 0
           this.fake_cursor.y = 0
           this.user_cursor.visible = false
@@ -315,7 +310,6 @@ export default class MainScene extends Phaser.Scene {
           this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
           this.fake_cursor.visible = false
-          this.anim_flag = false
           this.fake_cursor.x = 0
           this.fake_cursor.y = 0
           this.user_cursor.visible = false
@@ -334,8 +328,7 @@ export default class MainScene extends Phaser.Scene {
           }
           let combo_data = merge_data(this.trial_info, trial_data)
           console.log(combo_data)
-          this.all_data[this.trial_info.section].push(combo_data)
-          let delay = 1500
+          let delay = 1000
           delay += this.dont_move.visible ? 2000 : 0
           // feedback about movement angle (if non-imagery)
           let first_element = trial_data.movement_data[0]
@@ -347,9 +340,11 @@ export default class MainScene extends Phaser.Scene {
           //   console.log(first_element.time - this.reference_time)
           //   console.log(last_element.time - first_element.time)
           // }
+          let punished = false
           if (not_imagery && Math.abs(signedAngleDeg(last_element.cursor_angle, target_angle)) >= 60) {
             // bad reach angle
             delay += 2000
+            punished = true
             this.other_warns.text = '[b]Make straight reaches\ntoward the [color=#00ff00]green[/color] target.[/b]'
             this.other_warns.visible = true
             this.time.delayedCall(2000, () => {
@@ -357,6 +352,7 @@ export default class MainScene extends Phaser.Scene {
             })
           } else if (not_imagery && first_element.time - this.reference_time >= 1000) {
             delay += 2000
+            punished = true
             this.other_warns.text = '[b]Please start the\nreach sooner.[/b]'
             this.other_warns.visible = true
             this.time.delayedCall(2000, () => {
@@ -364,29 +360,41 @@ export default class MainScene extends Phaser.Scene {
             })
           } else if (not_imagery && last_element.time - first_element.time >= 500) {
             delay += 2000
+            punished = true
             this.other_warns.text = '[b]Please move more quickly.[/b]'
             this.other_warns.visible = true
             this.time.delayedCall(2000, () => {
               this.other_warns.visible = false
             })
           }
+          combo_data['punished'] = punished
+          this.all_data[this.trial_info.section].push(combo_data)
 
           this.time.delayedCall(delay, () => {
             this.raw_x = this.raw_y = this.user_cursor.x = this.user_cursor.y = -30
             this.user_cursor.visible = true
-            this.trial_counter += this.trial_incr
-            // decide new state
-            if (this.trial_counter >= this.trial_table.length) {
-              this.state = states.END_SECTION
-            } else if (this.trial_counter == 200) {
-              this.state = states.INSTRUCT
-            } else if (this.trial_counter == 40) {
-              this.state = states.INSTRUCT
-            } else if (this.trial_counter == 20) {
-              this.state = states.INSTRUCT
-            } else {
-              this.state = states.PRETRIAL
-            }
+            this.tweens.add({
+              targets: this.user_cursor,
+              scale: { from: 0, to: 1 },
+              ease: 'Elastic',
+              easeParams: [5, 0.5],
+              duration: 800,
+              onComplete: () => {
+                this.trial_counter += this.trial_incr
+                // decide new state
+                if (this.trial_counter >= this.trial_table.length) {
+                  this.state = states.END_SECTION
+                } else if (this.trial_counter == 200) {
+                  this.state = states.INSTRUCT
+                } else if (this.trial_counter == 40) {
+                  this.state = states.INSTRUCT
+                } else if (this.trial_counter == 20) {
+                  this.state = states.INSTRUCT
+                } else {
+                  this.state = states.PRETRIAL
+                }
+              },
+            })
           })
         }
         break

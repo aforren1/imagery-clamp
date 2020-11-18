@@ -13,7 +13,7 @@ async function sendFile(buf2, id, day) {
 
   await drive.files.create({
     requestBody: {
-      name: `data_${id}_day${day}.json`,
+      name: `imagine_data_${id}.json`,
       mimeType: 'application/json',
       parents: [FOLDER_ID],
     },
@@ -32,7 +32,7 @@ exports.handler = function (event, context, callback) {
 
   const data_in = JSON.parse(event.body)
 
-  sendFile(event.body, data_in['config']['id'], data_in['config']['day'])
+  sendFile(event.body, data_in['config']['id'])
     .then(() => {
       callback(null, {
         statusCode: 200,
