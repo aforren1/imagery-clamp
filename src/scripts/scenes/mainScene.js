@@ -55,7 +55,7 @@ export default class MainScene extends Phaser.Scene {
     this.trial_incr = 1
     // in debug mode, just do subset of trials
     if (this.game.user_config.debug) {
-      this.trial_incr = 20
+      this.trial_incr = 40
     }
 
     let angles = []
@@ -138,6 +138,28 @@ export default class MainScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setVisible(false)
 
+    this.break_txt = this.add
+      .rexBBCodeText(
+        0,
+        0,
+        'Take a 10 second break.\nRemember to visualize moving the cursor through the target on [color=magenta]imagination[/color] trials, and to make straight movements through the target on [color=#00ff00]action[/color] trials.',
+        {
+          fontFamily: 'Verdana',
+          fontStyle: 'bold',
+          fontSize: 40,
+          color: '#ffffff',
+          align: 'center',
+          stroke: '#444444',
+          backgroundColor: '#111111',
+          strokeThickness: 4,
+          wrap: {
+            mode: 'word',
+            width: 650,
+          },
+        }
+      )
+      .setOrigin(0.5, 0.5)
+      .setVisible(false)
     // start the mouse at offset
     this.raw_x = -30
     this.raw_y = -30
@@ -233,8 +255,17 @@ export default class MainScene extends Phaser.Scene {
         if (this.entering) {
           this.entering = false
           this.hold_t = 1000
+          this.break_lock = false
+          if (this.trial_counter == 120) {
+            this.break_lock = true
+            this.break_txt.visible = true
+            this.time.delayedCall(10000, () => {
+              this.break_lock = false
+              this.break_txt.visible = false
+            })
+          }
         }
-        if (Phaser.Geom.Circle.ContainsPoint(this.origin, this.user_cursor)) {
+        if (!this.break_lock && Phaser.Geom.Circle.ContainsPoint(this.origin, this.user_cursor)) {
           this.hold_t -= this.game.loop.delta
           if (this.hold_t <= 0) {
             this.raw_x = 0

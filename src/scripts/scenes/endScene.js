@@ -37,18 +37,18 @@ export default class EndScene extends Phaser.Scene {
     function shrink(scene) {
       scene.tweens.add({
         targets: [mouse, trackball, trackpad, touchscreen],
-        scale: { start: 1, end: 0 },
+        scale: { from: 1, to: 0 },
         duration: 1000,
       })
     }
 
-    const mouse = this.add.image(300, 300, 'mouse').setInteractive().setOrigin(0.5, 0.5)
+    const mouse = this.add.image(200, 300, 'mouse').setInteractive().setOrigin(0.5, 0.5)
     mouse.on('pointerdown', () => {
       this.game.user_config.device = 'mouse'
       shrink(this)
       postSelection(this)
     })
-    const touchscreen = this.add.image(300, 600, 'touchscreen').setInteractive().setOrigin(0.5, 0.5)
+    const touchscreen = this.add.image(200, 600, 'touchscreen').setInteractive().setOrigin(0.5, 0.5)
     touchscreen.on('pointerdown', () => {
       this.game.user_config.device = 'touchscreen'
       shrink(this)
