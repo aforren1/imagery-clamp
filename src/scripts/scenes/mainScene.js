@@ -6,6 +6,7 @@ import merge_data from '../utils/merge'
 import { smootherstep } from '../utils/ease'
 import trials from '../../assets/trial_settings.json'
 import { clamp } from '../utils/clamp'
+import signedAngleDeg from '../utils/angulardist'
 
 const WHITE = 0xffffff
 const MAGENTA = 0xff00ff // imagine moving to the target
@@ -14,9 +15,9 @@ const GRAY = 0x666666
 
 // instructions correspond to the 'section' divisions in the trial table
 const txt_1 =
-  'There are four circular targets arranged around the screen. Move your mouse to the small circle at the center of the screen to start a trial. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn back to [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
+  'There are four circular targets arranged around the screen. Move your mouse to the small circle at the center of the screen to start a trial. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. The target will turn back to [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.\n\nAfter the movement, the mouse cursor will [color=yellow]automatically teleport[/color] next to the center.'
 const txt_2 =
-  'The mouse cursor will now be visible during your movements. Continue to make straight mouse movements through the targets when they turn [color=#00ff00]green[/color].'
+  'The mouse cursor will now be [color=yellow]invisible[/color] during your movements. Continue to make straight mouse movements through the targets when they turn [color=#00ff00]green[/color].'
 const txt_3 =
   'You will now encounter [color=magenta]imagination[/color] and [color=#00ff00]action[/color] trials.\n\nOn [color=magenta]imagination[/color] trials, the target will turn [color=magenta]magenta[/color]. [color=red]Do not move the mouse to the magenta target[/color]. Instead, [color=yellow]imagine[/color] moving the mouse straight through the target. You will see the cursor miss the target. Try your best to [color=yellow]ignore[/color] the cursor and [color=yellow]visualize yourself moving the mouse directly through the target[/color].\n\nOn [color=#00ff00]action[/color] trials, the target will turn [color=#00ff00]green[/color]. Move your mouse straight through the [color=#00ff00]green[/color] target. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
 const txt_4 =
@@ -82,13 +83,34 @@ export default class MainScene extends Phaser.Scene {
 
     // movement warning
     this.dont_move = this.add
-      .text(0, 0, 'Do not move on\nimagine trials, but\nimagine moving\nthrough the target.', {
+      .rexBBCodeText(
+        0,
+        0,
+        '[b]Do not move on\n[color=magenta]imagine[/color] trials, but\nimagine moving\nthrough the target.[/b]',
+        {
+          fontFamily: 'Verdana',
+          fontStyle: 'bold',
+          fontSize: 50,
+          color: '#ffffff',
+          align: 'center',
+          stroke: '#444444',
+          backgroundColor: '#111111',
+          strokeThickness: 4,
+        }
+      )
+      .setOrigin(0.5, 0.5)
+      .setVisible(false)
+
+    // other warnings
+    this.other_warns = this.add
+      .rexBBCodeText(0, 0, '', {
         fontFamily: 'Verdana',
         fontStyle: 'bold',
         fontSize: 50,
-        color: '#ff0000',
+        color: '#ffffff',
         align: 'center',
         stroke: '#444444',
+        backgroundColor: '#111111',
         strokeThickness: 4,
       })
       .setOrigin(0.5, 0.5)
@@ -144,6 +166,9 @@ export default class MainScene extends Phaser.Scene {
         // useful for deciding when to turn on/off visual feedback
         let extent = Math.sqrt(Math.pow(this.raw_x, 2) + Math.pow(this.raw_y, 2))
         this.extent = extent
+        // convert cursor angle to degrees
+        let cursor_angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.Normalize(Math.atan2(this.raw_y, this.raw_x)))
+        this.cursor_angle = cursor_angle
         this.user_cursor.x = this.raw_x
         this.user_cursor.y = this.raw_y
         if (this.state === states.MOVING) {
@@ -152,7 +177,13 @@ export default class MainScene extends Phaser.Scene {
           user controls cursor and is invisible
           user does not control cursor-- animated by 
           */
-          this.trial_data.push({ time: time, cursor_x: this.raw_x, cursor_y: this.raw_y })
+          this.trial_data.push({
+            time: time,
+            cursor_x: this.raw_x,
+            cursor_y: this.raw_y,
+            cursor_extent: extent,
+            cursor_angle: cursor_angle,
+          })
           let tifo = this.trial_info
           if (tifo.trial_type === 'online_feedback') {
           }
@@ -186,7 +217,7 @@ export default class MainScene extends Phaser.Scene {
           } else if (this.trial_counter >= 20) {
             txt = txt_2
           }
-          this.instructions.start(txt, 10)
+          this.instructions.start(txt, 1)
           this.instructions.typing.once('complete', () => {
             this.any_start.visible = true
             this.input.once('pointerdown', () => {
@@ -249,7 +280,7 @@ export default class MainScene extends Phaser.Scene {
                   x: x,
                   y: y,
                   ease: 'Power4',
-                  duration: 300, // TODO: calc from how long it takes to get beyond
+                  duration: 200, // TODO: calc from how long it takes to get beyond
                   onComplete: () => {
                     this.anim_flag = true
                   },
@@ -261,6 +292,7 @@ export default class MainScene extends Phaser.Scene {
           }
           target.fillColor = color
         }
+
         if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
           console.log('Do not move on imagery trials.')
           this.dont_move.visible = true
@@ -275,9 +307,10 @@ export default class MainScene extends Phaser.Scene {
           this.fake_cursor.y = 0
           this.user_cursor.visible = false
         }
+        let fake_extent = Math.sqrt(Math.pow(this.fake_cursor.x, 2) + Math.pow(this.fake_cursor.y, 2))
         if (
           (tifo.trial_type !== 'clamp_imagery' && this.extent >= tifo.target_radius + 30) ||
-          (tifo.trial_type === 'clamp_imagery' && this.anim_flag)
+          (tifo.trial_type === 'clamp_imagery' && fake_extent >= tifo.target_radius + 30)
         ) {
           this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
@@ -297,12 +330,47 @@ export default class MainScene extends Phaser.Scene {
             movement_data: this.trial_data,
             reference_time: this.reference_time,
             moved_on_imagery: this.dont_move.visible,
+            trial_number: this.trial_counter,
           }
           let combo_data = merge_data(this.trial_info, trial_data)
           console.log(combo_data)
           this.all_data[this.trial_info.section].push(combo_data)
           let delay = 1500
           delay += this.dont_move.visible ? 2000 : 0
+          // feedback about movement angle (if non-imagery)
+          let first_element = trial_data.movement_data[0]
+          let last_element = trial_data.movement_data[trial_data.movement_data.length - 1]
+          let target_angle = this.trial_info.target_angle
+          let not_imagery = this.trial_info.trial_type !== 'clamp_imagery'
+          // debug reach duration and reaction time
+          // if (not_imagery) {
+          //   console.log(first_element.time - this.reference_time)
+          //   console.log(last_element.time - first_element.time)
+          // }
+          if (not_imagery && Math.abs(signedAngleDeg(last_element.cursor_angle, target_angle)) >= 60) {
+            // bad reach angle
+            delay += 2000
+            this.other_warns.text = '[b]Make straight reaches\ntoward the [color=#00ff00]green[/color] target.[/b]'
+            this.other_warns.visible = true
+            this.time.delayedCall(2000, () => {
+              this.other_warns.visible = false
+            })
+          } else if (not_imagery && first_element.time - this.reference_time >= 1000) {
+            delay += 2000
+            this.other_warns.text = '[b]Please start the\nreach sooner.[/b]'
+            this.other_warns.visible = true
+            this.time.delayedCall(2000, () => {
+              this.other_warns.visible = false
+            })
+          } else if (not_imagery && last_element.time - first_element.time >= 500) {
+            delay += 2000
+            this.other_warns.text = '[b]Please move more quickly.[/b]'
+            this.other_warns.visible = true
+            this.time.delayedCall(2000, () => {
+              this.other_warns.visible = false
+            })
+          }
+
           this.time.delayedCall(delay, () => {
             this.raw_x = this.raw_y = this.user_cursor.x = this.user_cursor.y = -30
             this.user_cursor.visible = true

@@ -27,7 +27,7 @@ def angle_helper(ref):
 def generate_trials(seed=1, sign=1):
 
     random.seed(seed)
-    radius = 200
+    radius = 250
     #sign = random.choice([-1, 1])
     ref_angle = random.randint(5, 85)
     clamp_angle = 15 * sign
@@ -36,7 +36,15 @@ def generate_trials(seed=1, sign=1):
 
     trials = []
 
-    # part 1: 20 baseline trials, no feedback
+    # part 1: 20 trials with online feedback
+    for repeat in range(5):
+        angles = angle_helper(ref_angle)
+        random.shuffle(angles)
+        for angle in angles:
+            trials.append(make_trial(radius, angle, clamp_angle,
+                                     'online_feedback', 'warmup_vis'))
+
+    # part 2: 20 baseline trials, no feedback
     for repeat in range(5):
         angles = angle_helper(ref_angle)
         random.shuffle(angles)
@@ -44,13 +52,6 @@ def generate_trials(seed=1, sign=1):
             trials.append(make_trial(radius, angle, clamp_angle,
                                      'no_feedback', 'warmup_invis'))
 
-    # part 2: 20 trials with online feedback
-    for repeat in range(5):
-        angles = angle_helper(ref_angle)
-        random.shuffle(angles)
-        for angle in angles:
-            trials.append(make_trial(radius, angle, clamp_angle,
-                                     'online_feedback', 'warmup_vis'))
     # part 3: main event
     bad_t = 1
 
@@ -97,17 +98,18 @@ def generate_trials(seed=1, sign=1):
 
 
 res = {}
-with time_fn():
+tfn = time_fn()
+with tfn:
     res[1] = generate_trials(seed=1, sign=1)
 
-with time_fn():
+with tfn:
     res[2] = generate_trials(seed=1, sign=-1)
 
-with time_fn():
-    res[3] = generate_trials(seed=2, sign=1)
+with tfn:
+    res[3] = generate_trials(seed=3, sign=1)
 
-with time_fn():
-    res[4] = generate_trials(seed=2, sign=-1)
+with tfn:
+    res[4] = generate_trials(seed=3, sign=-1)
 
 
 with open(f'trial_settings.json', 'w') as f:
