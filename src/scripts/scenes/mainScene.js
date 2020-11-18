@@ -27,7 +27,7 @@ const states = Enum([
   'PRETRIAL', // wait until in center
   'MOVING', // shoot through
   'POSTTRIAL', // auto teleport back to -30, -30
-  'TAKE_A_BREAK', // every 80 trials, take a break
+  //'TAKE_A_BREAK', // every 80 trials, take a break
   'END_SECTION', //
 ])
 
@@ -55,7 +55,7 @@ export default class MainScene extends Phaser.Scene {
     this.trial_incr = 1
     // in debug mode, just do subset of trials
     if (this.game.user_config.debug) {
-      this.trial_incr = 8
+      this.trial_incr = 10
     }
 
     let angles = []
@@ -275,8 +275,10 @@ export default class MainScene extends Phaser.Scene {
           this.fake_cursor.y = 0
           this.user_cursor.visible = false
         }
-        if ((tifo.trial_type !== 'clamp_imagery' && this.extent >= tifo.target_radius + 30) ||
-          (tifo.trial_type === 'clamp_imagery' && this.anim_flag)) {
+        if (
+          (tifo.trial_type !== 'clamp_imagery' && this.extent >= tifo.target_radius + 30) ||
+          (tifo.trial_type === 'clamp_imagery' && this.anim_flag)
+        ) {
           this.targets[tifo.target_angle].fillColor = GRAY
           this.state = states.POSTTRIAL
           this.fake_cursor.visible = false
@@ -291,7 +293,11 @@ export default class MainScene extends Phaser.Scene {
         if (this.entering) {
           this.entering = false
           // deal with trial data
-          let trial_data = { movement_data: this.trial_data, reference_time: this.reference_time, moved_on_imagery: this.dont_move.visible }
+          let trial_data = {
+            movement_data: this.trial_data,
+            reference_time: this.reference_time,
+            moved_on_imagery: this.dont_move.visible,
+          }
           let combo_data = merge_data(this.trial_info, trial_data)
           console.log(combo_data)
           this.all_data[this.trial_info.section].push(combo_data)
@@ -302,7 +308,36 @@ export default class MainScene extends Phaser.Scene {
             this.user_cursor.visible = true
             this.trial_counter += this.trial_incr
             // decide new state
-            this.state = states.PRETRIAL
+            if (this.trial_counter >= this.trial_table.length) {
+              this.state = states.END_SECTION
+            } else if (this.trial_counter == 200) {
+              this.state = states.INSTRUCT
+            } else if (this.trial_counter == 40) {
+              this.state = states.INSTRUCT
+            } else if (this.trial_counter == 20) {
+              this.state = states.INSTRUCT
+            } else {
+              this.state = states.PRETRIAL
+            }
+          })
+        }
+        break
+      case states.END_SECTION:
+        if (this.entering) {
+          this.entering = false
+
+          // fade out
+          this.tweens.addCounter({
+            from: 255,
+            to: 0,
+            duration: 2000,
+            onUpdate: (t) => {
+              let v = Math.floor(t.getValue())
+              this.cameras.main.setAlpha(v / 255)
+            },
+            onComplete: () => {
+              this.scene.start('EndScene', this.all_data)
+            },
           })
         }
         break

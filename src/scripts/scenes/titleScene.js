@@ -27,8 +27,7 @@ export default class TitleScene extends Phaser.Scene {
           color: '#ffffff',
           stroke: true,
           fill: true,
-
-        }
+        },
       })
       .setOrigin(0.5, 0.5)
 
