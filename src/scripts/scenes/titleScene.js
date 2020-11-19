@@ -9,6 +9,7 @@ export default class TitleScene extends Phaser.Scene {
     // this.load.image('check', 'assets/check_small.png')
     // this.load.image('x', 'assets/x_small.png')
     // this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json')
+    this.load.image('think', 'assets/think.png')
     this.load.image('mouse', 'assets/mouse.jpg')
     this.load.image('touchscreen', 'assets/touchscreen.jpg')
     this.load.image('trackball', 'assets/trackball.jpg')
@@ -17,6 +18,8 @@ export default class TitleScene extends Phaser.Scene {
   create() {
     let height = this.game.config.height
     let center = height / 2
+
+    this.add.image(center, center + 50, 'think').setScale(1.5, 1.2)
 
     this.add
       .text(center, center - 200, 'Imagine.', {

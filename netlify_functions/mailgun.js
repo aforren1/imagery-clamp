@@ -13,7 +13,7 @@ function sendMailgun(buf2, id, p_count, tot, callback) {
   })
 
   let data = {
-    from: "Alex 'Mailgun' Forrence <mailgun@" + DOMAIN + '>',
+    from: 'The Mailgun Machine <mailgun@' + DOMAIN + '>',
     to: 'actlab@yale.edu',
     subject: `[imagine] Fresh data from ${id}`,
     text: `see attached, punished ${p_count} / ${tot} trials.`,
