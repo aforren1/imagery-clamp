@@ -2,7 +2,7 @@ import '@babel/polyfill'
 import Phaser from './phaser-custom' // slightly more nuanced custom build
 
 import log from './utils/logger'
-import 'devtools-detect'
+// import 'devtools-detect'
 import UAParser from 'ua-parser-js'
 
 import RoundRectanglePlugin from 'phaser3-rex-plugins/plugins/roundrectangle-plugin.js'
@@ -108,6 +108,6 @@ window.addEventListener('unload', (event) => {})
 
 // breaks on IE, so dump if that's really a big deal
 // Might be able to polyfill our way out, too?
-window.addEventListener('devtoolschange', (event) => {
-  log.warn(`Devtools opened: ${event.detail.isOpen} at time ${window.performance.now()}`)
-})
+// window.addEventListener('devtoolschange', (event) => {
+//   log.warn(`Devtools opened: ${event.detail.isOpen} at time ${window.performance.now()}`)
+// })

@@ -166,7 +166,11 @@ export default class MainScene extends Phaser.Scene {
 
     // set up mouse callback (does all the heavy lifting)
     this.input.on('pointerdown', (ptr) => {
-      this.input.mouse.requestPointerLock()
+      this.scale.startFullscreen()
+      this.time.delayedCall(400, () => {
+        this.input.mouse.requestPointerLock()
+      })
+      //this.input.mouse.requestPointerLock()
     })
     this.input.on('pointerlockchange', (ptr) => {
       console.log('oh no, this does not work')
