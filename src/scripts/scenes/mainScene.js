@@ -15,7 +15,7 @@ const GRAY = 0x666666
 
 // instructions correspond to the 'section' divisions in the trial table
 const txt_1 =
-  'There are four circular targets arranged around the screen. Move your mouse to the small circle at the center of the screen to start a trial. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. The target will turn back to [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.\n\nAfter the movement, the mouse cursor will [color=yellow]automatically teleport[/color] next to the center.'
+  'There are four circular targets arranged around the screen. Move your mouse to the small circle at the center of the screen to start a trial. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. The target will turn back to [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.\n\nAfter the movement, the mouse cursor will [color=yellow]teleport[/color] next to the center.'
 const txt_2 =
   'The mouse cursor will now be [color=yellow]invisible[/color] during your movements. Continue to make straight mouse movements through the targets when they turn [color=#00ff00]green[/color].'
 const txt_3 =
@@ -74,7 +74,6 @@ export default class MainScene extends Phaser.Scene {
       let y = radius * Math.sin(radians)
       this.targets[angle] = this.add.circle(x, y, 30, GRAY)
     }
-    console.log(this.targets)
 
     // user cursor
     this.user_cursor = this.add.circle(-30, -30, 5, WHITE)
