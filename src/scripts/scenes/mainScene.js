@@ -308,6 +308,7 @@ export default class MainScene extends Phaser.Scene {
         if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
           console.log('Do not move on imagery trials.')
           this.moved_on_imagery = true
+          this.fake_cursor.visible = false
         }
         let fake_extent = Math.sqrt(Math.pow(this.fake_cursor.x, 2) + Math.pow(this.fake_cursor.y, 2))
         if (
@@ -348,6 +349,7 @@ export default class MainScene extends Phaser.Scene {
           //   console.log(last_element.time - first_element.time)
           // }
           // try to get an idea of how straight the movement was
+          // ignore early points (which will likely have extreme values)
           let reach_angles = this.trial_data.filter((a) => a.cursor_extent > 15).map((a) => a.cursor_angle)
           let end_angle = reach_angles.slice(-1)
           let norm_reach_angles = reach_angles.map((a) => signedAngleDeg(a, end_angle))
