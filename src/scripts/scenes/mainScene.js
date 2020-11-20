@@ -7,11 +7,13 @@ import { smootherstep } from '../utils/ease'
 import trials from '../../assets/trial_settings.json'
 import { clamp } from '../utils/clamp'
 import signedAngleDeg from '../utils/angulardist'
+import { mad } from '../utils/medians'
 
 const WHITE = 0xffffff
 const MAGENTA = 0xff00ff // imagine moving to the target
 const GREEN = 0x00ff00 // actually move to the target
 const GRAY = 0x666666
+const TARGET_SIZE_RADIUS = 30
 
 // instructions correspond to the 'section' divisions in the trial table
 const txt_1 =
@@ -72,32 +74,12 @@ export default class MainScene extends Phaser.Scene {
       let radians = Phaser.Math.DegToRad(angle)
       let x = radius * Math.cos(radians)
       let y = radius * Math.sin(radians)
-      this.targets[angle] = this.add.circle(x, y, 30, GRAY)
+      this.targets[angle] = this.add.circle(x, y, TARGET_SIZE_RADIUS, GRAY)
     }
 
     // user cursor
     this.user_cursor = this.add.circle(-30, -30, 5, WHITE)
     this.fake_cursor = this.add.circle(0, 0, 5, WHITE).setVisible(false)
-
-    // movement warning
-    this.dont_move = this.add
-      .rexBBCodeText(
-        0,
-        0,
-        '[b]Do not move on\n[color=magenta]imagine[/color] trials, but\nimagine moving\nthrough the target.[/b]',
-        {
-          fontFamily: 'Verdana',
-          fontStyle: 'bold',
-          fontSize: 50,
-          color: '#ffffff',
-          align: 'center',
-          stroke: '#444444',
-          backgroundColor: '#111111',
-          strokeThickness: 4,
-        }
-      )
-      .setOrigin(0.5, 0.5)
-      .setVisible(false)
 
     // other warnings
     this.other_warns = this.add
@@ -287,7 +269,16 @@ export default class MainScene extends Phaser.Scene {
         let tifo = this.trial_info
         if (this.entering) {
           this.entering = false
+          this.moved_on_imagery = false
           this.reference_time = this.game.loop.now
+          // every trial starts at 0, 0
+          this.trial_data.splice(0, 0, {
+            time: this.reference_time,
+            cursor_x: 0,
+            cursor_y: 0,
+            cursor_extent: 0,
+            cursor_angle: 0,
+          })
           // look up trial info
 
           //console.log(tifo)
@@ -325,16 +316,7 @@ export default class MainScene extends Phaser.Scene {
 
         if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
           console.log('Do not move on imagery trials.')
-          this.dont_move.visible = true
-          this.time.delayedCall(3000, () => {
-            this.dont_move.visible = false
-          })
-          this.targets[tifo.target_angle].fillColor = GRAY
-          this.state = states.POSTTRIAL
-          this.fake_cursor.visible = false
-          this.fake_cursor.x = 0
-          this.fake_cursor.y = 0
-          this.user_cursor.visible = false
+          this.moved_on_imagery = true
         }
         let fake_extent = Math.sqrt(Math.pow(this.fake_cursor.x, 2) + Math.pow(this.fake_cursor.y, 2))
         if (
@@ -357,15 +339,15 @@ export default class MainScene extends Phaser.Scene {
           let trial_data = {
             movement_data: this.trial_data,
             reference_time: this.reference_time,
-            moved_on_imagery: this.dont_move.visible,
+            moved_on_imagery: this.moved_on_imagery,
             trial_number: this.trial_counter,
+            target_size_radius: TARGET_SIZE_RADIUS, // fixed above
           }
           let combo_data = merge_data(this.trial_info, trial_data)
           console.log(combo_data)
           let delay = 1000
-          delay += this.dont_move.visible ? 2000 : 0
           // feedback about movement angle (if non-imagery)
-          let first_element = trial_data.movement_data[0]
+          let first_element = trial_data.movement_data[1]
           let last_element = trial_data.movement_data[trial_data.movement_data.length - 1]
           let target_angle = this.trial_info.target_angle
           let not_imagery = this.trial_info.trial_type !== 'clamp_imagery'
@@ -374,34 +356,44 @@ export default class MainScene extends Phaser.Scene {
           //   console.log(first_element.time - this.reference_time)
           //   console.log(last_element.time - first_element.time)
           // }
+          // try to
+          let reach_angles = this.trial_data.map((a) => a.cursor_angle).slice(1)
+          let end_angle = reach_angles.slice(-1)
+          let norm_reach_angles = reach_angles.map((a) => signedAngleDeg(a, end_angle))
+          // console.log(norm_reach_angles)
+          // console.log(mad(norm_reach_angles))
           let punished = false
-          if (not_imagery && Math.abs(signedAngleDeg(last_element.cursor_angle, target_angle)) >= 60) {
-            // bad reach angle
-            delay += 2000
+          let punish_delay = 2000
+          if (!not_imagery && this.moved_on_imagery) {
             punished = true
-            this.other_warns.text = '[b]Make straight reaches\ntoward the [color=#00ff00]green[/color] target.[/b]'
-            this.other_warns.visible = true
-            this.time.delayedCall(2000, () => {
-              this.other_warns.visible = false
-            })
+            this.other_warns.text =
+              '[b]Do not move on\n[color=magenta]imagine[/color] trials, but\nimagine moving\nthrough the target.[/b]'
+          } else if (not_imagery && Math.abs(signedAngleDeg(last_element.cursor_angle, target_angle)) >= 60) {
+            // bad reach angle at endpoint
+            punished = true
+            this.other_warns.text = '[b]Make reaches toward\nthe [color=#00ff00]green[/color] target.[/b]'
           } else if (not_imagery && first_element.time - this.reference_time >= 1000) {
-            delay += 2000
+            // high RT
             punished = true
             this.other_warns.text = '[b]Please start the\nreach sooner.[/b]'
-            this.other_warns.visible = true
-            this.time.delayedCall(2000, () => {
-              this.other_warns.visible = false
-            })
           } else if (not_imagery && last_element.time - first_element.time >= 500) {
-            delay += 2000
+            // slow reach
             punished = true
             this.other_warns.text = '[b]Please move more quickly.[/b]'
+          } else if (mad(norm_reach_angles) > 15) {
+            // wiggly reach
+            punished = true
+            this.other_warns.text =
+              '[b]Please make straight\nreaches toward the\n[color=#00ff00]green[/color] target.[/b]'
+          }
+          if (punished) {
+            delay += punish_delay
             this.other_warns.visible = true
-            this.time.delayedCall(2000, () => {
+            this.time.delayedCall(punish_delay, () => {
               this.other_warns.visible = false
             })
           }
-          combo_data['punished'] = punished
+          combo_data['any_punishment'] = punished
           this.all_data[this.trial_info.section].push(combo_data)
 
           this.time.delayedCall(delay, () => {
