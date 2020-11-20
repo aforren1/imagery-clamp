@@ -57,7 +57,7 @@ export default class MainScene extends Phaser.Scene {
     this.trial_incr = 1
     // in debug mode, just do subset of trials
     if (this.game.user_config.debug) {
-      this.trial_incr = 40
+      this.trial_incr = 20
     }
 
     let angles = []
@@ -196,15 +196,6 @@ export default class MainScene extends Phaser.Scene {
         }
       }
     })
-    // set up pausing (TODO, doesn't actually work-- resuming doesn't resume the update loop)
-    // this.scale.on('leavefullscreen', () => {
-    //   this.scene.pause()
-    //   this.scene.launch('PauseScene')
-    // })
-    // this.game.events.on('hidden', () => {
-    //   this.scene.pause()
-    //   this.scene.launch('PauseScene')
-    // })
   }
 
   update() {
@@ -356,8 +347,8 @@ export default class MainScene extends Phaser.Scene {
           //   console.log(first_element.time - this.reference_time)
           //   console.log(last_element.time - first_element.time)
           // }
-          // try to
-          let reach_angles = this.trial_data.map((a) => a.cursor_angle).slice(1)
+          // try to get an idea of how straight the movement was
+          let reach_angles = this.trial_data.filter((a) => a.cursor_extent > 15).map((a) => a.cursor_angle)
           let end_angle = reach_angles.slice(-1)
           let norm_reach_angles = reach_angles.map((a) => signedAngleDeg(a, end_angle))
           // console.log(norm_reach_angles)
@@ -380,11 +371,11 @@ export default class MainScene extends Phaser.Scene {
             // slow reach
             punished = true
             this.other_warns.text = '[b]Please move more quickly.[/b]'
-          } else if (mad(norm_reach_angles) > 15) {
+          } else if (mad(norm_reach_angles) > 10) {
             // wiggly reach
             punished = true
             this.other_warns.text =
-              '[b]Please make straight\nreaches toward the\n[color=#00ff00]green[/color] target.[/b]'
+              '[b]Please make [color=yellow]straight[/color]\nreaches toward the\n[color=#00ff00]green[/color] target.[/b]'
           }
           if (punished) {
             delay += punish_delay

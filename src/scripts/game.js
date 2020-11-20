@@ -10,7 +10,6 @@ import BBCodeTextPlugin from 'phaser3-rex-plugins/plugins/bbcodetext-plugin.js'
 import TextTypingPlugin from 'phaser3-rex-plugins/plugins/texttyping-plugin.js'
 import TitleScene from './scenes/titleScene'
 import MainScene from './scenes/mainScene'
-import PauseScene from './scenes/pauseScene'
 import EndScene from './scenes/endScene'
 
 let small_dim = 800 // nothing's going to be perfectly scaled, but that's fine?
@@ -27,7 +26,7 @@ const phaser_config = {
   audio: {
     noAudio: true,
   },
-  scene: [TitleScene, MainScene, PauseScene, EndScene],
+  scene: [TitleScene, MainScene, EndScene],
   plugins: {
     global: [
       {
