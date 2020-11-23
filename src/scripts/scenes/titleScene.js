@@ -76,6 +76,7 @@ export default class TitleScene extends Phaser.Scene {
           // TODO: https://docs.google.com/document/d/17pvFMFqtAIx0ZA6zMZRU_A2-VnjhNX9QlN1Cgy-3Wdg/edit
           this.input.mouse.requestPointerLock()
           this.scene.start('MainScene')
+          //console.log(foo.selection, bar.selection)
         },
       })
     })

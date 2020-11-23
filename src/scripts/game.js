@@ -8,6 +8,7 @@ import UAParser from 'ua-parser-js'
 import RoundRectanglePlugin from 'phaser3-rex-plugins/plugins/roundrectangle-plugin.js'
 import BBCodeTextPlugin from 'phaser3-rex-plugins/plugins/bbcodetext-plugin.js'
 import TextTypingPlugin from 'phaser3-rex-plugins/plugins/texttyping-plugin.js'
+import UIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js'
 import TitleScene from './scenes/titleScene'
 import MainScene from './scenes/mainScene'
 import EndScene from './scenes/endScene'
@@ -43,6 +44,13 @@ const phaser_config = {
         key: 'rexTextTypingPlugin',
         plugin: TextTypingPlugin,
         start: true,
+      },
+    ],
+    scene: [
+      {
+        key: 'rexUI',
+        plugin: UIPlugin,
+        mapping: 'rexUI',
       },
     ],
   },

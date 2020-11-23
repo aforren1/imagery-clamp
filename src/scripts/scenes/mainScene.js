@@ -1,5 +1,6 @@
 import log from '../utils/logger'
 import { TypingText } from '../objects/typingtext'
+import make_question from '../objects/question'
 import { Enum } from '../utils/enum'
 import { Examples, Examples2 } from '../objects/examples'
 import merge_data from '../utils/merge'
@@ -141,6 +142,36 @@ export default class MainScene extends Phaser.Scene {
       )
       .setOrigin(0.5, 0.5)
       .setVisible(false)
+
+    // survey questions
+    this.q1 = make_question(
+      this,
+      0,
+      -200,
+      'Rate the clarity of the visual image associated with the imagined movement:',
+      [
+        '5 - Image as clear as seeing',
+        '4 - Clear image',
+        '3 - Moderately clear image',
+        '2 - Vague image',
+        '1 - No image, you only "know" that you are thinking of the movement',
+      ]
+    ) //.setVisible(false)
+
+    this.q2 = make_question(
+      this,
+      0,
+      100,
+      'Rate the intensity of the physical sensations associated with the imagined movement:',
+      [
+        '5 - As intense as executing the action',
+        '4 - Intense',
+        '3 - Moderate',
+        '2 - Mild',
+        '1 - No sensation, you only "know" that you are thinking of the movement',
+      ]
+    ).setVisible(false)
+
     // start the mouse at offset
     this.raw_x = -30
     this.raw_y = -30
