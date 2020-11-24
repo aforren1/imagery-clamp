@@ -8,7 +8,7 @@ import merge_data from '../utils/merge'
 import trials from '../../assets/trial_settings.json'
 import { clamp } from '../utils/clamp'
 import signedAngleDeg from '../utils/angulardist'
-import { mad } from '../utils/medians'
+import { mad, median } from '../utils/medians'
 
 const WHITE = 0xffffff
 const MAGENTA = 0xff00ff // imagine moving to the target
@@ -78,6 +78,8 @@ export default class MainScene extends Phaser.Scene {
     this.trial_counter = 0
     this.entering = true
     this.state = states.INSTRUCT
+    this.rts = [] // reaction times during invis practice
+    this.movets = [] // movement times during invis practice
 
     let group = this.game.user_config.group
     this.trial_table = trials[group]
@@ -127,7 +129,7 @@ export default class MainScene extends Phaser.Scene {
       .setVisible(false)
 
     // big fullscreen quad in front of game, but behind text instructions
-    this.darkener = this.add.rectangle(0, 0, 800, 800, 0x000000).setAlpha(0.9)
+    this.darkener = this.add.rectangle(0, 0, 800, 800, 0x000000).setAlpha(1)
 
     this.instructions = TypingText(this, 0, -hd2 + 20, '', {
       fontFamily: 'Verdana',
@@ -381,15 +383,20 @@ export default class MainScene extends Phaser.Scene {
             let radius = tifo.target_radius + 60
             let x = radius * Math.cos(radians)
             let y = radius * Math.sin(radians)
+            let delay = Math.min(this.rts.length ? median(this.rts) : 250, 250)
+            let dur = Math.min(this.movets.length ? median(this.movets) : 60, 60)
+            //let delay = 500
             this.tweens.timeline({
               tweens: [
                 {
-                  delay: 500, // TODO: median RT + jitter?
+                  // TODO: median RT + jitter?
+                  delay: delay,
                   targets: this.fake_cursor,
                   x: x,
                   y: y,
-                  ease: 'Power4',
-                  duration: 200, // TODO: calc from how long it takes to get beyond
+                  ease: 'Power3',
+                  // TODO: calc from how long it takes to get beyond
+                  duration: dur,
                 },
               ],
             })
@@ -448,6 +455,17 @@ export default class MainScene extends Phaser.Scene {
           let reach_angles = this.trial_data.filter((a) => a.cursor_extent > 15).map((a) => a.cursor_angle)
           let end_angle = reach_angles.slice(-1)
           let norm_reach_angles = reach_angles.map((a) => signedAngleDeg(a, end_angle))
+          let reaction_time = null
+          let reach_time = null
+          if (trial_data.movement_data.length > 2) {
+            reaction_time = first_element.evt_creation_time - this.reference_time
+            reach_time = last_element.evt_creation_time - first_element.evt_creation_time
+          }
+
+          if (this.trial_info.trial_type === 'no_feedback' && this.trial_info.section === 'warmup_invis') {
+            this.rts.push(reaction_time)
+            this.movets.push(reach_time)
+          }
           // console.log(norm_reach_angles)
           // console.log(mad(norm_reach_angles))
           let punished = false
@@ -460,11 +478,11 @@ export default class MainScene extends Phaser.Scene {
             // bad reach angle at endpoint
             punished = true
             this.other_warns.text = '[b]Make reaches toward\nthe [color=#00ff00]green[/color] target.[/b]'
-          } else if (not_imagery && first_element.evt_creation_time - this.reference_time >= 1000) {
+          } else if (not_imagery && reaction_time >= 1000) {
             // high RT
             punished = true
             this.other_warns.text = '[b]Please start the\nreach sooner.[/b]'
-          } else if (not_imagery && last_element.evt_creation_time - first_element.evt_creation_time >= 500) {
+          } else if (not_imagery && reach_time >= 500) {
             // slow reach
             punished = true
             this.other_warns.text = '[b]Please move more quickly.[/b]'
@@ -483,6 +501,9 @@ export default class MainScene extends Phaser.Scene {
           }
           combo_data['any_punishment'] = punished
           combo_data['delay_time'] = delay
+          combo_data['reaction_time'] = reaction_time
+          combo_data['reach_time'] = reach_time
+          console.log(combo_data)
           this.all_data[this.trial_info.section].push(combo_data)
 
           this.time.delayedCall(delay, () => {
