@@ -10,7 +10,9 @@ Production test: `npm run build && netlify dev`
 - Intro instructions
 - 20 trials of baseline reaches to targets, no feedback
 - 20 trials of reaches to targets, with online feedback (so participants get used to seeing a cursor)
-- Introduce imagery instructions + clamp instructions (Olivia and I will write those up soon)
+- Introduce imagery instructions + clamp instructions
+  - Now we're introducing another type of trial ~imagine~ (practice imagine until success)
+  - Good job! Now mix
 - 160 trials of the manipulation period, with 75% being 15˚ (+/- counterbalanced across subs) clamp imagine trials, and 25% being no-feedback actual reaches. How this will work is the color that the target turns, which is the "go" cue, will dictate if people should imagine moving to the target (e.g. from white to ~blue~ magenta) or actually move to the target (e.g. from white to green). We can have periodic reminders about the color meanings and also to remind them to always reach (or imagine reaching) straight to the target every trial
 - 40 washout no feedback reach trials (straight to target),
 

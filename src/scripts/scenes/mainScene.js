@@ -1,6 +1,7 @@
 import log from '../utils/logger'
 import { TypingText } from '../objects/typingtext'
 import make_question from '../objects/question'
+import make_submit from '../objects/button'
 import { Enum } from '../utils/enum'
 import { Examples, Examples2 } from '../objects/examples'
 import merge_data from '../utils/merge'
@@ -24,7 +25,10 @@ const txt_2 =
 const txt_3 =
   'You will now encounter [color=magenta]imagination[/color] and [color=#00ff00]action[/color] trials.\n\nOn [color=magenta]imagination[/color] trials, the target will turn [color=magenta]magenta[/color]. [color=red]Do not move the mouse to the magenta target[/color]. Instead, [color=yellow]imagine[/color] moving the mouse straight through the target. You will see the cursor miss the target. Try your best to [color=yellow]ignore[/color] the cursor and [color=yellow]visualize yourself moving the mouse directly through the target[/color].\n\nOn [color=#00ff00]action[/color] trials, the target will turn [color=#00ff00]green[/color]. Move your mouse straight through the [color=#00ff00]green[/color] target. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
 const txt_4 =
-  'One more section! This section will be the same as the first section. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
+  'This section will be the same as the second section. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
+
+const txt_5 =
+  'Two more trials to go! The first trial will be an [color=#00ff00]action[/color] trial without a visible cursor, and the second will be an [color=magenta]imagination[/color] trial. After these two trials, we will ask you two questions about those trials.'
 
 const states = Enum([
   'INSTRUCT', // show text instructions (based on stage of task)
@@ -32,6 +36,7 @@ const states = Enum([
   'MOVING', // shoot through
   'POSTTRIAL', // auto teleport back to -30, -30
   //'TAKE_A_BREAK', // every 80 trials, take a break
+  'QUESTIONS', // ask some questions about the last two trials
   'END_SECTION', //
 ])
 
@@ -40,7 +45,7 @@ export default class MainScene extends Phaser.Scene {
     super({ key: 'MainScene' })
     this._state = states.INSTRUCT
     this.entering = true
-    this.all_data = { warmup_invis: [], warmup_vis: [], imagine: [], washout: [] }
+    this.all_data = { warmup_invis: [], warmup_vis: [], imagine: [], washout: [], questionnaire: { a1: -1, a2: -1 } }
   }
 
   create() {
@@ -58,7 +63,7 @@ export default class MainScene extends Phaser.Scene {
     this.trial_incr = 1
     // in debug mode, just do subset of trials
     if (this.game.user_config.debug) {
-      this.trial_incr = 20
+      this.trial_incr = 40
     }
 
     let angles = []
@@ -156,7 +161,7 @@ export default class MainScene extends Phaser.Scene {
         '2 - Vague image',
         '1 - No image, you only "know" that you are thinking of the movement',
       ]
-    ) //.setVisible(false)
+    ).setVisible(false)
 
     this.q2 = make_question(
       this,
@@ -172,17 +177,22 @@ export default class MainScene extends Phaser.Scene {
       ]
     ).setVisible(false)
 
+    this.submit_button = make_submit(this, 0, 300).setVisible(false)
+
     // start the mouse at offset
     this.raw_x = -30
     this.raw_y = -30
 
     // set up mouse callback (does all the heavy lifting)
     this.input.on('pointerdown', (ptr) => {
-      this.scale.startFullscreen()
-      this.time.delayedCall(400, () => {
-        this.input.mouse.requestPointerLock()
-      })
-      //this.input.mouse.requestPointerLock()
+      let val = this.state !== states.QUESTIONS && this.state !== states.END_SECTION
+      console.log(val)
+      if (val) {
+        this.scale.startFullscreen()
+        this.time.delayedCall(400, () => {
+          this.input.mouse.requestPointerLock()
+        })
+      }
     })
     this.input.on('pointerlockchange', (ptr) => {
       console.log('oh no, this does not work')
@@ -215,7 +225,8 @@ export default class MainScene extends Phaser.Scene {
           user does not control cursor-- animated by 
           */
           this.trial_data.push({
-            time: time,
+            callback_time: time,
+            evt_creation_time: ptr.moveTime,
             cursor_x: this.raw_x,
             cursor_y: this.raw_y,
             cursor_extent: extent,
@@ -237,8 +248,9 @@ export default class MainScene extends Phaser.Scene {
           this.instructions.visible = true
           this.darkener.visible = true
           let txt = txt_1
-
-          if (this.trial_counter >= 200) {
+          if (this.trial_counter >= 220) {
+            txt = txt_5
+          } else if (this.trial_counter >= 200) {
             txt = txt_4
           } else if (this.trial_counter >= 40) {
             txt = txt_3
@@ -295,7 +307,8 @@ export default class MainScene extends Phaser.Scene {
           this.reference_time = this.game.loop.now
           // every trial starts at 0, 0
           this.trial_data.splice(0, 0, {
-            time: this.reference_time,
+            callback_time: this.reference_time,
+            evt_creation_time: this.reference_time,
             cursor_x: 0,
             cursor_y: 0,
             cursor_extent: 0,
@@ -337,7 +350,6 @@ export default class MainScene extends Phaser.Scene {
         }
 
         if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
-          console.log('Do not move on imagery trials.')
           this.moved_on_imagery = true
           this.fake_cursor.visible = false
         }
@@ -396,11 +408,11 @@ export default class MainScene extends Phaser.Scene {
             // bad reach angle at endpoint
             punished = true
             this.other_warns.text = '[b]Make reaches toward\nthe [color=#00ff00]green[/color] target.[/b]'
-          } else if (not_imagery && first_element.time - this.reference_time >= 1000) {
+          } else if (not_imagery && first_element.evt_creation_time - this.reference_time >= 1000) {
             // high RT
             punished = true
             this.other_warns.text = '[b]Please start the\nreach sooner.[/b]'
-          } else if (not_imagery && last_element.time - first_element.time >= 500) {
+          } else if (not_imagery && last_element.evt_creation_time - first_element.evt_creation_time >= 500) {
             // slow reach
             punished = true
             this.other_warns.text = '[b]Please move more quickly.[/b]'
@@ -433,7 +445,9 @@ export default class MainScene extends Phaser.Scene {
                 this.trial_counter += this.trial_incr
                 // decide new state
                 if (this.trial_counter >= this.trial_table.length) {
-                  this.state = states.END_SECTION
+                  this.state = states.QUESTIONS
+                } else if (this.trial_counter == this.trial_table.length - 2) {
+                  this.state = states.INSTRUCT
                 } else if (this.trial_counter == 200) {
                   this.state = states.INSTRUCT
                 } else if (this.trial_counter == 40) {
@@ -447,6 +461,25 @@ export default class MainScene extends Phaser.Scene {
             })
           })
         }
+        break
+
+      case states.QUESTIONS:
+        if (this.entering) {
+          this.input.mouse.releasePointerLock()
+          this.entering = false
+          this.q1.visible = true
+          this.q2.visible = true
+          this.submit_button.visible = true
+          this.submit_button.on('button.click', (button, index, pointer, event) => {
+            if (this.q1.selection !== null && this.q2.selection !== null) {
+              this.all_data.questionnaire['a1'] = this.q1.selection
+              this.all_data.questionnaire['a2'] = this.q2.selection
+              console.log(this.q1.selection, this.q2.selection)
+              this.state = states.END_SECTION
+            }
+          })
+        }
+
         break
       case states.END_SECTION:
         if (this.entering) {

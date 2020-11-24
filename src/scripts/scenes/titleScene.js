@@ -1,5 +1,5 @@
 import log from '../utils/logger'
-
+import { InvisExample } from '../objects/examples'
 export default class TitleScene extends Phaser.Scene {
   constructor() {
     super({ key: 'TitleScene' })
@@ -10,6 +10,7 @@ export default class TitleScene extends Phaser.Scene {
     // this.load.image('x', 'assets/x_small.png')
     // this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json')
     this.load.image('think', 'assets/think.png')
+    this.load.image('cursor', 'assets/cursor.png')
     this.load.image('mouse', 'assets/mouse.jpg')
     this.load.image('touchscreen', 'assets/touchscreen.jpg')
     this.load.image('trackball', 'assets/trackball.jpg')
@@ -57,6 +58,8 @@ export default class TitleScene extends Phaser.Scene {
       repeat: -1,
       yoyo: true,
     })
+
+    let foo = new InvisExample(this, center, center, 1)
 
     this.input.once('pointerdown', (ptr) => {
       // I wish I could do both at the same time, but after the fullscreen

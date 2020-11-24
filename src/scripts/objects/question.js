@@ -39,7 +39,7 @@ export default function make_question(scene, x, y, question, responses) {
   return foo
 }
 
-function createButton(scene, text) {
+export function createButton(scene, text) {
   return scene.rexUI.add.label({
     width: 100,
     height: 25,
