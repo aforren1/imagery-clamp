@@ -5,7 +5,6 @@ import make_submit from '../objects/button'
 import { Enum } from '../utils/enum'
 import { Examples, Examples2 } from '../objects/examples'
 import merge_data from '../utils/merge'
-import { smootherstep } from '../utils/ease'
 import trials from '../../assets/trial_settings.json'
 import { clamp } from '../utils/clamp'
 import signedAngleDeg from '../utils/angulardist'
@@ -23,11 +22,15 @@ const txt_1 =
 const txt_2 =
   'The mouse cursor will now be [color=yellow]invisible[/color] during your movements. Continue to make straight mouse movements through the targets when they turn [color=#00ff00]green[/color].'
 const txt_3 =
-  'You will now encounter [color=magenta]imagination[/color] and [color=#00ff00]action[/color] trials.\n\nOn [color=magenta]imagination[/color] trials, the target will turn [color=magenta]magenta[/color]. [color=red]Do not move the mouse to the magenta target[/color]. Instead, [color=yellow]imagine[/color] moving the mouse straight through the target. You will see the cursor miss the target. Try your best to [color=yellow]ignore[/color] the cursor and [color=yellow]visualize yourself moving the mouse directly through the target[/color].\n\nOn [color=#00ff00]action[/color] trials, the target will turn [color=#00ff00]green[/color]. Move your mouse straight through the [color=#00ff00]green[/color] target. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
+  'You will now encounter a new type of trial.\n\nOn [color=magenta]imagination[/color] trials, the target will turn [color=magenta]magenta[/color]. [color=red]Do not move the mouse to the magenta target[/color]. Instead, [color=yellow]imagine[/color] moving the mouse straight through the target. You will see the cursor miss the target. Try your best to [color=yellow]ignore[/color] the cursor and [color=yellow]visualize yourself moving the mouse directly through the target[/color].'
+
 const txt_4 =
-  'This section will be the same as the second section. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
+  'Good job! Now you will experience a mix of [color=magenta]imagination[/color] and [color=#00ff00]action[/color] trials. When the target is [color=magenta]magenta[/color], [color=yellow]imagine[/color] moving your mouse straight through the target and [color=yellow]ignore[/color] the cursor. When the target is [color=#00ff00]green[/color], [color=yellow]move[/color] your mouse straight through the target. Always try to make straight mouse movements.'
 
 const txt_5 =
+  'This section will be the same as the second section. When a target turns [color=#00ff00]green[/color], move your mouse straight through it. You will not see the cursor while you move. The target will turn [color=#777777]gray[/color] when you have moved far enough. Always try to make straight mouse movements.'
+
+const txt_6 =
   'Two more trials to go! The first trial will be an [color=#00ff00]action[/color] trial without a visible cursor, and the second will be an [color=magenta]imagination[/color] trial. After these two trials, we will ask you two questions about those trials.'
 
 const states = Enum([
@@ -45,7 +48,15 @@ export default class MainScene extends Phaser.Scene {
     super({ key: 'MainScene' })
     this._state = states.INSTRUCT
     this.entering = true
-    this.all_data = { warmup_invis: [], warmup_vis: [], imagine: [], washout: [], questionnaire: { a1: -1, a2: -1 } }
+    this.all_data = {
+      warmup_vis: [], // practice reaching with vis feedback
+      warmup_invis: [], // practice reaching without vis feedback
+      imagine_criterion: [], // unknown size, until person doesn't move on magenta
+      imagine: [], // the big dance-- mix of imagery and real reaches
+      washout: [], // back to warmup_invis, but now they've experienced the world
+      questionnaire_reach: [], // two trials during questionnaire
+      questionnaire: { a1: -1, a2: -1 }, // two questions at end
+    }
   }
 
   create() {
@@ -232,9 +243,6 @@ export default class MainScene extends Phaser.Scene {
             cursor_extent: extent,
             cursor_angle: cursor_angle,
           })
-          let tifo = this.trial_info
-          if (tifo.trial_type === 'online_feedback') {
-          }
         }
       }
     })
@@ -247,15 +255,23 @@ export default class MainScene extends Phaser.Scene {
           this.entering = false
           this.instructions.visible = true
           this.darkener.visible = true
-          let txt = txt_1
-          if (this.trial_counter >= 220) {
-            txt = txt_5
-          } else if (this.trial_counter >= 200) {
-            txt = txt_4
-          } else if (this.trial_counter >= 40) {
-            txt = txt_3
-          } else if (this.trial_counter >= 20) {
-            txt = txt_2
+          let txt = txt_1 // intro (visible reaching)
+          // we're going to insert a trial at index 40 for
+          // imagery practice, so everything after that gets
+          // bumped one (though note the data in imagine_criterion
+          // may not be of length one, depending on how long it takes
+          // for them to be successful. Also the trial counter won't increment
+          // during the criterion.)
+          if (this.trial_counter == 221) {
+            txt = txt_6 // ask some questions
+          } else if (this.trial_counter == 201) {
+            txt = txt_5 // back to invis, w/o imagery
+          } else if (this.trial_counter == 41) {
+            txt = txt_4 // mix imagery + invis
+          } else if (this.trial_counter == 40) {
+            txt = txt_3 // practice imagery until success
+          } else if (this.trial_counter == 20) {
+            txt = txt_2 // start invis reaching
           }
           this.instructions.start(txt, 1) // 1 for debug, 50 for real
           this.instructions.typing.once('complete', () => {
@@ -442,13 +458,17 @@ export default class MainScene extends Phaser.Scene {
               easeParams: [5, 0.5],
               duration: 800,
               onComplete: () => {
-                this.trial_counter += this.trial_incr
+                if (!(this.trial_counter == 40 && punished)) {
+                  this.trial_counter += this.trial_incr
+                }
                 // decide new state
                 if (this.trial_counter >= this.trial_table.length) {
                   this.state = states.QUESTIONS
-                } else if (this.trial_counter == this.trial_table.length - 2) {
+                } else if (this.trial_counter == 221) {
                   this.state = states.INSTRUCT
-                } else if (this.trial_counter == 200) {
+                } else if (this.trial_counter == 201) {
+                  this.state = states.INSTRUCT
+                } else if (this.trial_counter == 41) {
                   this.state = states.INSTRUCT
                 } else if (this.trial_counter == 40) {
                   this.state = states.INSTRUCT

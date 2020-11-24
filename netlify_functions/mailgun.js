@@ -41,7 +41,7 @@ exports.handler = function (event, context, callback) {
   let p_count = 0
   let dat = data_in.data['imagine']
   for (let i = 0; i < dat.length; i++) {
-    if (dat[i].punished) {
+    if (dat[i].any_punishment) {
       p_count += 1
     }
   }

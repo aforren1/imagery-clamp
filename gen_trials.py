@@ -53,6 +53,10 @@ def generate_trials(seed=1, sign=1):
                                      'no_feedback', 'warmup_invis'))
 
     # part 3: main event
+    # insert one criterion trial, will repeat until success
+    trials.append(make_trial(radius, angles[0], clamp_angle,
+                             'clamp_imagery', 'imagine_criterion'))
+
     bad_t = 1
 
     while bad_t:
@@ -94,6 +98,12 @@ def generate_trials(seed=1, sign=1):
         for angle in angles:
             trials.append(make_trial(radius, angle, clamp_angle,
                                      'no_feedback', 'washout'))
+
+    # part 5: 2 questionnaire trials
+    trials.append(make_trial(radius, angle, clamp_angle,
+                             'no_feedback', 'questionnaire_reach'))
+    trials.append(make_trial(radius, angle, clamp_angle,
+                             'clamp_imagery', 'questionnaire_reach'))
     return trials
 
 
