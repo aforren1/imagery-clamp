@@ -1,5 +1,4 @@
 import log from '../utils/logger'
-import { InvisExample } from '../objects/examples'
 export default class TitleScene extends Phaser.Scene {
   constructor() {
     super({ key: 'TitleScene' })
@@ -50,7 +49,7 @@ export default class TitleScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0.5)
 
-    this.tweens.add({
+    this.flash = this.tweens.add({
       targets: start_txt,
       alpha: { from: 0.3, to: 1 },
       ease: 'Linear',
@@ -59,13 +58,12 @@ export default class TitleScene extends Phaser.Scene {
       yoyo: true,
     })
 
-    let foo = new InvisExample(this, center, center, 1)
-
     this.input.once('pointerdown', (ptr) => {
       // I wish I could do both at the same time, but after the fullscreen
       // comes on it releases the pointer lock?? At least on FF, chrome does fine
       // this.input.mouse.requestPointerLock()
       // TODO: readd
+      this.flash.stop()
       this.scale.startFullscreen()
       this.tweens.addCounter({
         from: 255,

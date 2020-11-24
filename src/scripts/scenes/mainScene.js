@@ -3,7 +3,7 @@ import { TypingText } from '../objects/typingtext'
 import make_question from '../objects/question'
 import make_submit from '../objects/button'
 import { Enum } from '../utils/enum'
-import { Examples, Examples2 } from '../objects/examples'
+import { VisExample, InvisExample, ImageryExample } from '../objects/examples'
 import merge_data from '../utils/merge'
 import trials from '../../assets/trial_settings.json'
 import { clamp } from '../utils/clamp'
@@ -15,6 +15,7 @@ const MAGENTA = 0xff00ff // imagine moving to the target
 const GREEN = 0x00ff00 // actually move to the target
 const GRAY = 0x666666
 const TARGET_SIZE_RADIUS = 30
+const CURSOR_SIZE_RADIUS = 5
 
 // instructions correspond to the 'section' divisions in the trial table
 const txt_1 =
@@ -42,6 +43,16 @@ const states = Enum([
   'QUESTIONS', // ask some questions about the last two trials
   'END_SECTION', //
 ])
+
+function resetExamples(obj) {
+  for (let o in obj) {
+    obj[o].visible = false
+    obj[o].stop()
+    obj[o].setScale(1, 1)
+    obj[o].x = 0
+    obj[o].y = 0
+  }
+}
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -72,9 +83,11 @@ export default class MainScene extends Phaser.Scene {
     this.trial_table = trials[group]
 
     this.trial_incr = 1
+    this.typing_speed = 50
     // in debug mode, just do subset of trials
     if (this.game.user_config.debug) {
       this.trial_incr = 40
+      this.typing_speed = 1
     }
 
     let angles = []
@@ -95,8 +108,8 @@ export default class MainScene extends Phaser.Scene {
     }
 
     // user cursor
-    this.user_cursor = this.add.circle(-30, -30, 5, WHITE)
-    this.fake_cursor = this.add.circle(0, 0, 5, WHITE).setVisible(false)
+    this.user_cursor = this.add.circle(-30, -30, CURSOR_SIZE_RADIUS, WHITE)
+    this.fake_cursor = this.add.circle(0, 0, CURSOR_SIZE_RADIUS, WHITE).setVisible(false)
 
     // other warnings
     this.other_warns = this.add
@@ -190,6 +203,15 @@ export default class MainScene extends Phaser.Scene {
 
     this.submit_button = make_submit(this, 0, 300).setVisible(false)
 
+    // examples
+    this.examples = {
+      vis_example: new VisExample(this, 0, 0, 1).setVisible(false),
+      invis_example: new InvisExample(this, 0, 0, 1).setVisible(false),
+      imagine_example: new ImageryExample(this, 0, 0, 1).setVisible(false),
+    }
+
+    console.log(this.examples)
+
     // start the mouse at offset
     this.raw_x = -30
     this.raw_y = -30
@@ -197,7 +219,7 @@ export default class MainScene extends Phaser.Scene {
     // set up mouse callback (does all the heavy lifting)
     this.input.on('pointerdown', (ptr) => {
       let val = this.state !== states.QUESTIONS && this.state !== states.END_SECTION
-      console.log(val)
+      //console.log(val)
       if (val) {
         this.scale.startFullscreen()
         this.time.delayedCall(400, () => {
@@ -266,17 +288,29 @@ export default class MainScene extends Phaser.Scene {
             txt = txt_6 // ask some questions
           } else if (this.trial_counter == 201) {
             txt = txt_5 // back to invis, w/o imagery
+            this.examples['invis_example'].visible = true
+            this.examples['invis_example'].play()
           } else if (this.trial_counter == 41) {
             txt = txt_4 // mix imagery + invis
+            this.examples['imagine_example'].setVisible(true).setScale(0.5).setPosition(150, -100).play()
+            this.examples['invis_example'].setVisible(true).setScale(0.5).setPosition(-150, 100).play()
           } else if (this.trial_counter == 40) {
             txt = txt_3 // practice imagery until success
+            this.examples['imagine_example'].setVisible(true)
+            this.examples['imagine_example'].play()
           } else if (this.trial_counter == 20) {
             txt = txt_2 // start invis reaching
+            this.examples['invis_example'].visible = true
+            this.examples['invis_example'].play()
+          } else {
+            this.examples['vis_example'].visible = true
+            this.examples['vis_example'].play()
           }
-          this.instructions.start(txt, 1) // 1 for debug, 50 for real
+          this.instructions.start(txt, this.typing_speed) // 1 for debug, 50 for real
           this.instructions.typing.once('complete', () => {
             this.any_start.visible = true
             this.input.once('pointerdown', () => {
+              resetExamples(this.examples)
               this.darkener.visible = false
               this.instructions.visible = false
               this.instructions.text = ''
@@ -291,7 +325,7 @@ export default class MainScene extends Phaser.Scene {
           this.entering = false
           this.hold_t = 1000
           this.break_lock = false
-          if (this.trial_counter == 120) {
+          if (this.trial_counter == 121) {
             this.break_lock = true
             this.break_txt.visible = true
             this.time.delayedCall(10000, () => {
@@ -393,9 +427,10 @@ export default class MainScene extends Phaser.Scene {
             moved_on_imagery: this.moved_on_imagery,
             trial_number: this.trial_counter,
             target_size_radius: TARGET_SIZE_RADIUS, // fixed above
+            cursor_size_radius: CURSOR_SIZE_RADIUS,
           }
           let combo_data = merge_data(this.trial_info, trial_data)
-          console.log(combo_data)
+          //console.log(combo_data)
           let delay = 1000
           // feedback about movement angle (if non-imagery)
           let first_element = trial_data.movement_data[1]
@@ -494,7 +529,7 @@ export default class MainScene extends Phaser.Scene {
             if (this.q1.selection !== null && this.q2.selection !== null) {
               this.all_data.questionnaire['a1'] = this.q1.selection
               this.all_data.questionnaire['a2'] = this.q2.selection
-              console.log(this.q1.selection, this.q2.selection)
+              //console.log(this.q1.selection, this.q2.selection)
               this.state = states.END_SECTION
             }
           })
