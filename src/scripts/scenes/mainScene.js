@@ -210,8 +210,6 @@ export default class MainScene extends Phaser.Scene {
       imagine_example: new ImageryExample(this, 0, 0, 1).setVisible(false),
     }
 
-    console.log(this.examples)
-
     // start the mouse at offset
     this.raw_x = -30
     this.raw_y = -30
@@ -325,6 +323,7 @@ export default class MainScene extends Phaser.Scene {
           this.entering = false
           this.hold_t = 1000
           this.break_lock = false
+          this.t_ref = window.performance.now()
           if (this.trial_counter == 121) {
             this.break_lock = true
             this.break_txt.visible = true
@@ -337,6 +336,7 @@ export default class MainScene extends Phaser.Scene {
         if (!this.break_lock && Phaser.Geom.Circle.ContainsPoint(this.origin, this.user_cursor)) {
           this.hold_t -= this.game.loop.delta
           if (this.hold_t <= 0) {
+            this.inter_trial_interval = window.performance.now() - this.t_ref
             this.raw_x = 0
             this.raw_y = 0
             this.user_cursor.x = 0
@@ -428,9 +428,10 @@ export default class MainScene extends Phaser.Scene {
             trial_number: this.trial_counter,
             target_size_radius: TARGET_SIZE_RADIUS, // fixed above
             cursor_size_radius: CURSOR_SIZE_RADIUS,
+            inter_trial_interval: this.inter_trial_interval, // amount of time between cursor appear & teleport
           }
           let combo_data = merge_data(this.trial_info, trial_data)
-          //console.log(combo_data)
+          // console.log(combo_data)
           let delay = 1000
           // feedback about movement angle (if non-imagery)
           let first_element = trial_data.movement_data[1]
@@ -481,6 +482,7 @@ export default class MainScene extends Phaser.Scene {
             })
           }
           combo_data['any_punishment'] = punished
+          combo_data['delay_time'] = delay
           this.all_data[this.trial_info.section].push(combo_data)
 
           this.time.delayedCall(delay, () => {

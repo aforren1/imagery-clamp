@@ -19,7 +19,7 @@ function createButton(scene, text) {
   return scene.rexUI.add.label({
     width: 40,
     height: 40,
-    background: scene.rexUI.add.roundRectangle(0, 0, 0, 0, 20, 0xc2561a).setStrokeStyle(3, 0xffffff),
+    background: scene.rexUI.add.roundRectangle(0, 0, 0, 0, 20, 0x36454f).setStrokeStyle(3, 0xffffff),
     text: scene.add.text(0, 0, text, {
       fontSize: '24px',
       fontFamily: 'Verdana',

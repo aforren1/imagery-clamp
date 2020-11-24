@@ -1,11 +1,11 @@
-const ORANGE = 0xc2561a
+const CHARCOAL = 0x36454f
 
 export default function make_question(scene, x, y, question, responses) {
   let foo = scene.rexUI.add
     .dialog({
       x: x,
       y: y,
-      background: scene.add.rexRoundRectangle(0, 0, 50, 100, 10, ORANGE),
+      background: scene.add.rexRoundRectangle(0, 0, 50, 100, 10, CHARCOAL),
       choicesType: 'radio',
       content: scene.add.text(0, 0, question, {
         fontSize: '22px',
@@ -48,7 +48,7 @@ export function createButton(scene, text) {
       fontFamily: 'Verdana',
       wordWrap: { width: 500, useAdvancedWrap: true },
     }),
-    icon: scene.add.circle(0, 0, 10).setStrokeStyle(3, 0x333333),
+    icon: scene.add.circle(0, 0, 10).setStrokeStyle(3, 0x000000),
     space: {
       left: 10,
       right: 10,
