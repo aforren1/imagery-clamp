@@ -129,7 +129,7 @@ export default class MainScene extends Phaser.Scene {
       .setVisible(false)
 
     // big fullscreen quad in front of game, but behind text instructions
-    this.darkener = this.add.rectangle(0, 0, 800, 800, 0x000000).setAlpha(1)
+    this.darkener = this.add.rectangle(0, 0, 800, 800, 0x222222).setAlpha(1)
 
     this.instructions = TypingText(this, 0, -hd2 + 20, '', {
       fontFamily: 'Verdana',
@@ -383,8 +383,8 @@ export default class MainScene extends Phaser.Scene {
             let radius = tifo.target_radius + 60
             let x = radius * Math.cos(radians)
             let y = radius * Math.sin(radians)
-            let delay = Math.min(this.rts.length ? median(this.rts) : 250, 250)
-            let dur = Math.min(this.movets.length ? median(this.movets) : 60, 60)
+            let delay = Math.max(this.rts.length ? median(this.rts) : 250, 250)
+            let dur = Math.max(this.movets.length ? median(this.movets) : 80, 80)
             //let delay = 500
             this.tweens.timeline({
               tweens: [
