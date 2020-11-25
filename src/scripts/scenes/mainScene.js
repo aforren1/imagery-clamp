@@ -384,7 +384,7 @@ export default class MainScene extends Phaser.Scene {
             let x = radius * Math.cos(radians)
             let y = radius * Math.sin(radians)
             let delay = Math.max(this.rts.length ? median(this.rts) : 250, 250)
-            let dur = Math.max(this.movets.length ? median(this.movets) : 100, 100)
+            let dur = Math.max(this.movets.length ? median(this.movets) : 200, 200)
             //let delay = 500
             this.tweens.timeline({
               tweens: [
@@ -406,7 +406,7 @@ export default class MainScene extends Phaser.Scene {
           target.fillColor = color
         }
 
-        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 15) {
+        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 10) {
           this.moved_on_imagery = true
           this.fake_cursor.visible = false
         }
