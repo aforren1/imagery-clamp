@@ -503,7 +503,7 @@ export default class MainScene extends Phaser.Scene {
           combo_data['delay_time'] = delay
           combo_data['reaction_time'] = reaction_time
           combo_data['reach_time'] = reach_time
-          console.log(combo_data)
+          // console.log(combo_data)
           this.all_data[this.trial_info.section].push(combo_data)
 
           this.time.delayedCall(delay, () => {
