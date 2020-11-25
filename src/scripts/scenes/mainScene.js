@@ -384,7 +384,7 @@ export default class MainScene extends Phaser.Scene {
             let x = radius * Math.cos(radians)
             let y = radius * Math.sin(radians)
             let delay = Math.max(this.rts.length ? median(this.rts) : 250, 250)
-            let dur = Math.max(this.movets.length ? median(this.movets) : 80, 80)
+            let dur = Math.max(this.movets.length ? median(this.movets) : 100, 100)
             //let delay = 500
             this.tweens.timeline({
               tweens: [
@@ -394,7 +394,7 @@ export default class MainScene extends Phaser.Scene {
                   targets: this.fake_cursor,
                   x: x,
                   y: y,
-                  ease: 'Power3',
+                  ease: 'Power2',
                   // TODO: calc from how long it takes to get beyond
                   duration: dur,
                 },
