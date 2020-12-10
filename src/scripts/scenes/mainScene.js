@@ -284,7 +284,7 @@ export default class MainScene extends Phaser.Scene {
           // may not be of length one, depending on how long it takes
           // for them to be successful. Also the trial counter won't increment
           // during the criterion.)
-          if (this.trial_counter == 145) {
+          if (this.trial_counter == 141) {
             txt = txt_6 // ask some questions
           } else if (this.trial_counter == 125) {
             txt = txt_5 // back to invis, w/o imagery
@@ -407,7 +407,7 @@ export default class MainScene extends Phaser.Scene {
           target.fillColor = color
         }
 
-        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 2) {
+        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 4) {
           this.moved_on_imagery = true
           this.fake_cursor.visible = false
         }
