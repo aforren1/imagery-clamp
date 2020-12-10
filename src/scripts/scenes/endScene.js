@@ -30,7 +30,7 @@ export default class EndScene extends Phaser.Scene {
       let alldata = { config: scene.game.user_config, data: today_data }
 
       Promise.all(postData(alldata)).then((values) => {
-        window.location.href = mostly + '321B5ECD'
+        window.location.href = mostly + '78F974E9'
       })
     }
 

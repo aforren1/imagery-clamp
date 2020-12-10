@@ -284,21 +284,21 @@ export default class MainScene extends Phaser.Scene {
           // may not be of length one, depending on how long it takes
           // for them to be successful. Also the trial counter won't increment
           // during the criterion.)
-          if (this.trial_counter == 221) {
+          if (this.trial_counter == 145) {
             txt = txt_6 // ask some questions
-          } else if (this.trial_counter == 201) {
+          } else if (this.trial_counter == 125) {
             txt = txt_5 // back to invis, w/o imagery
             this.examples['invis_example'].visible = true
             this.examples['invis_example'].play()
-          } else if (this.trial_counter == 41) {
+          } else if (this.trial_counter == 29) {
             txt = txt_4 // mix imagery + invis
             this.examples['imagine_example'].setVisible(true).setScale(0.5).setPosition(150, -100).play()
             this.examples['invis_example'].setVisible(true).setScale(0.5).setPosition(-150, 100).play()
-          } else if (this.trial_counter == 40) {
+          } else if (this.trial_counter == 28) {
             txt = txt_3 // practice imagery until success
             this.examples['imagine_example'].setVisible(true)
             this.examples['imagine_example'].play()
-          } else if (this.trial_counter == 20) {
+          } else if (this.trial_counter == 8) {
             txt = txt_2 // start invis reaching
             this.examples['invis_example'].visible = true
             this.examples['invis_example'].play()
@@ -326,7 +326,7 @@ export default class MainScene extends Phaser.Scene {
           this.hold_t = 1000
           this.break_lock = false
           this.t_ref = window.performance.now()
-          if (this.trial_counter == 121) {
+          if (this.trial_counter == 77) {
             this.break_lock = true
             this.break_txt.visible = true
             this.time.delayedCall(10000, () => {
@@ -341,6 +341,7 @@ export default class MainScene extends Phaser.Scene {
             this.inter_trial_interval = window.performance.now() - this.t_ref
             this.raw_x = 0
             this.raw_y = 0
+            this.extent = 0
             this.user_cursor.x = 0
             this.user_cursor.y = 0
             this.state = states.MOVING
@@ -406,7 +407,7 @@ export default class MainScene extends Phaser.Scene {
           target.fillColor = color
         }
 
-        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 10) {
+        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 2) {
           this.moved_on_imagery = true
           this.fake_cursor.visible = false
         }
@@ -489,8 +490,7 @@ export default class MainScene extends Phaser.Scene {
           } else if (mad(norm_reach_angles) > 10) {
             // wiggly reach
             punished = true
-            this.other_warns.text =
-              '[b]Please make [color=yellow]straight[/color]\nreaches toward the\n[color=#00ff00]green[/color] target.[/b]'
+            this.other_warns.text = '[b]Please make [color=yellow]straight[/color]\nreaches toward the target.[/b]'
           }
           if (punished) {
             delay += punish_delay
@@ -516,21 +516,21 @@ export default class MainScene extends Phaser.Scene {
               easeParams: [5, 0.5],
               duration: 800,
               onComplete: () => {
-                if (!(this.trial_counter == 40 && punished)) {
+                if (!(this.trial_counter == 28 && punished)) {
                   this.trial_counter += this.trial_incr
                 }
                 // decide new state
                 if (this.trial_counter >= this.trial_table.length) {
                   this.state = states.QUESTIONS
-                } else if (this.trial_counter == 221) {
+                } else if (this.trial_counter == 141) {
                   this.state = states.INSTRUCT
-                } else if (this.trial_counter == 201) {
+                } else if (this.trial_counter == 125) {
                   this.state = states.INSTRUCT
-                } else if (this.trial_counter == 41) {
+                } else if (this.trial_counter == 29) {
                   this.state = states.INSTRUCT
-                } else if (this.trial_counter == 40) {
+                } else if (this.trial_counter == 28) {
                   this.state = states.INSTRUCT
-                } else if (this.trial_counter == 20) {
+                } else if (this.trial_counter == 8) {
                   this.state = states.INSTRUCT
                 } else {
                   this.state = states.PRETRIAL

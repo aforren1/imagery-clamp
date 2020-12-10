@@ -36,8 +36,8 @@ def generate_trials(seed=1, sign=1):
 
     trials = []
 
-    # part 1: 20 trials with online feedback
-    for repeat in range(5):
+    # part 1: 8 trials with online feedback
+    for repeat in range(2):
         angles = angle_helper(ref_angle)
         random.shuffle(angles)
         for angle in angles:
@@ -57,42 +57,87 @@ def generate_trials(seed=1, sign=1):
     trials.append(make_trial(radius, angles[0], clamp_angle,
                              'clamp_imagery', 'imagine_criterion'))
 
-    bad_t = 1
+    # now generate 4 * 12 = 96 trials of imagery
+    # constraints:
+    #  - in each set of 4 trials, one no-feedback reach + 3 imagined reaches (i.e. 75% imagery)
+    #  - in each set of 4 trials, see all targets once
+    #  - Each target has a no-feedback reach every 16 trials
+    #  - never two consecutive no-feedback reaches
+    #  - never two no-feedback reaches to same target in consecutive blocks
+    #
 
-    while bad_t:
-        ind_pools = []
-        for i in range(4):
-            tmp = (['clamp_imagery'] * imagine_per_target +
-                   ['no_feedback'] * no_feedback_per_target)
-            bad = 1
-            while bad:
-                bad = 0
-                random.shuffle(tmp)
-                for count, val in enumerate(tmp):
-                    if count > 0 and tmp[count] == 'no_feedback' and tmp[count - 1] == 'no_feedback':
-                        bad = 1
-            ind_pools.append(tmp)
+    mega_blocks = 6
+    # make all angles and shuffle randomly
+    # Generate all 6 * 4 = 24 no-feedback reaches
+    # Make sure never consecutive vals
+    no_feedback_angles = angle_helper(ref_angle) * mega_blocks
+    bad = True
+    while bad:
+        bad = False
+        random.shuffle(no_feedback_angles)
+        # make sure no consecutive values
+        for i in range(1, len(no_feedback_angles)):
+            if no_feedback_angles[i] == no_feedback_angles[i - 1]:
+                bad = True
+                break
 
-        out = []
-        bad_t = 0
-        for i in range(len(ind_pools[0])):
-            arr = [0, 1, 2, 3]
+        # make sure one of each per megablock
+        for i in range(6):
+            start = i * 4
+            stop = i * 4 + 4
+            sub = set(no_feedback_angles[start:stop])
+            if len(sub) < 4:
+                bad = True
+                break
+
+    # now we have all the no-feedback reaches generated
+    # next, generate the entire set of trials
+    # all we need to constrain now is that we see
+    # all targets once, that there are no consecutive reaches,
+    # and that the first trial is an imagery
+
+    out = []
+    for no_feedback_angle in no_feedback_angles:
+        bad = True
+        print(len(out))
+        while bad:
+            bad = False
             angles = angle_helper(ref_angle)
-            random.shuffle(arr)
-            for count, val in enumerate(arr):
-                out.append(make_trial(radius, angles[val],
-                                      clamp_angle, ind_pools[val][i],
-                                      'imagine'))
-                lo = len(out)
-                if lo > 1:
-                    if out[-1]['trial_type'] == 'no_feedback' and out[-2]['trial_type'] == 'no_feedback':
-                        bad_t = 1
-                        continue
+            random.shuffle(angles)
+            # first trial not moving
+            if not out and angles.index(no_feedback_angle) == 0:
+                bad = True
+                continue
 
-    trials.extend(out)
+            # dictify
+            potential_partials = [{'trial_type': 'clamp_imagery',
+                                   'target_angle': ang} for ang in angles]
 
-    # part 4: 40 washout trials, no feedback
-    for repeat in range(5):
+            for pot in potential_partials:
+                if pot['target_angle'] == no_feedback_angle:
+                    pot['trial_type'] = 'no_feedback'
+
+            if not out:
+                out.extend(potential_partials)
+                break
+
+            else:  # check last addition
+                if out[-1]['trial_type'] == 'no_feedback' and potential_partials[0]['trial_type'] == 'no_feedback':
+                    bad = True
+                    continue
+                else:
+                    out.extend(potential_partials)
+                    bad = False
+                    break
+            bad = True
+
+    # stick the rest of the details on out
+    for t in out:
+        trials.append(make_trial(radius, t['target_angle'], clamp_angle,
+                                 t['trial_type'], 'imagine'))
+
+    # part 4: 16 washout trials, no feedback
+    for repeat in range(4):
         angles = angle_helper(ref_angle)
         random.shuffle(angles)
         for angle in angles:
@@ -122,5 +167,5 @@ with tfn:
     res[4] = generate_trials(seed=3, sign=-1)
 
 
-with open(f'trial_settings.json', 'w') as f:
+with open(f'src/assets/trial_settings.json', 'w') as f:
     json.dump(res, f)
