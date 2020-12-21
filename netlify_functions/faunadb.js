@@ -1,7 +1,6 @@
 // from https://github.com/netlify/netlify-faunadb-example/blob/master/functions/todos-create.js
 const faunadb = require('faunadb')
 const q = faunadb.query
-
 /*
 Couple of TODOs:
 
