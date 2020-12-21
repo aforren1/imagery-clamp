@@ -39,7 +39,6 @@ const states = Enum([
   'PRETRIAL', // wait until in center
   'MOVING', // shoot through
   'POSTTRIAL', // auto teleport back to -30, -30
-  //'TAKE_A_BREAK', // every 80 trials, take a break
   'QUESTIONS', // ask some questions about the last two trials
   'END_SECTION', //
 ])
