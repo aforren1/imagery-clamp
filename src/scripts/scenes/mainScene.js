@@ -154,7 +154,7 @@ export default class MainScene extends Phaser.Scene {
       .rexBBCodeText(
         0,
         0,
-        'Take a 10 second break.\nRemember to visualize moving the cursor through the target on [color=magenta]imagination[/color] trials, and to make straight movements through the target on [color=#00ff00]action[/color] trials.',
+        'Take a 10 second break.\nRemember to [color=yellow]imagine[/color] moving the cursor through the target on [color=magenta]imagination[/color] trials, and to make straight movements through the target on [color=#00ff00]action[/color] trials.',
         {
           fontFamily: 'Verdana',
           fontStyle: 'bold',
