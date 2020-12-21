@@ -30,7 +30,7 @@ export default class EndScene extends Phaser.Scene {
       let alldata = { config: scene.game.user_config, data: today_data }
 
       Promise.all(postData(alldata)).then((values) => {
-        window.location.href = mostly + '321B5ECD'
+        window.location.href = mostly + '753B34D8'
       })
     }
 
@@ -38,7 +38,7 @@ export default class EndScene extends Phaser.Scene {
       scene.tweens.add({
         targets: [mouse, trackball, trackpad, touchscreen],
         scale: { from: 1, to: 0 },
-        duration: 1000,
+        duration: 5000,
       })
     }
 

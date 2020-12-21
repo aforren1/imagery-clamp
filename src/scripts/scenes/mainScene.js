@@ -341,6 +341,7 @@ export default class MainScene extends Phaser.Scene {
             this.inter_trial_interval = window.performance.now() - this.t_ref
             this.raw_x = 0
             this.raw_y = 0
+            this.extent = 0
             this.user_cursor.x = 0
             this.user_cursor.y = 0
             this.state = states.MOVING
@@ -406,7 +407,7 @@ export default class MainScene extends Phaser.Scene {
           target.fillColor = color
         }
 
-        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 10) {
+        if (tifo.trial_type === 'clamp_imagery' && this.extent >= 4) {
           this.moved_on_imagery = true
           this.fake_cursor.visible = false
         }
@@ -489,8 +490,7 @@ export default class MainScene extends Phaser.Scene {
           } else if (mad(norm_reach_angles) > 10) {
             // wiggly reach
             punished = true
-            this.other_warns.text =
-              '[b]Please make [color=yellow]straight[/color]\nreaches toward the\n[color=#00ff00]green[/color] target.[/b]'
+            this.other_warns.text = '[b]Please make [color=yellow]straight[/color]\nreaches toward the target.[/b]'
           }
           if (punished) {
             delay += punish_delay

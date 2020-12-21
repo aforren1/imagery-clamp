@@ -31,10 +31,10 @@ function postMailgun(data) {
   return _postData(data, '/.netlify/functions/mailgun')
 }
 
-function postDrive(data) {
-  return _postData(data, '/.netlify/functions/drive')
+function postFauna(data) {
+  return _postData(data, '/.netlify/functions/faunadb')
 }
 
 export default function postData(data) {
-  return [postMailgun(data), postDrive(data)]
+  return [postMailgun(data), postFauna(data)]
 }
